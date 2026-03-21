@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  sweethome-dev:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    container_name: sweethome-dev
+    volumes:
+      - ..:/workspace
+      - sweethome-cache:/workspace/build
+    ports:
+      # VNC server
+      - "5901:5901"
+      # For X11 forwarding if needed (optional)
+      - "6000:6000"
+    environment:
+      # Java options for Java 16+ compatibility (if needed)
+      - _JAVA_OPTIONS=-Djava.library.path=/workspace/lib/java3d-1.6/linux/amd64:/workspace/lib/yafaray/linux/x64
+      - ANT_HOME=/usr/share/ant
+      - ANT_OPTS=-Xmx2048m
+    stdin_open: true
+    tty: true
+    networks:
+      - sweethome-network
+
+volumes:
+  sweethome-cache:
+    driver: local
+
+networks:
+  sweethome-network:
+    driver: bridge
