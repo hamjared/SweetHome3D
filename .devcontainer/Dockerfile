@@ -1,4 +1,4 @@
-FROM eclipse-temurin:11-jdk-noble
+FROM eclipse-temurin:21-jdk-noble
 
 # Install Ant, Python, and necessary build tools
 RUN apt-get update && apt-get install -y \

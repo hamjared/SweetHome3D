@@ -9,6 +9,7 @@ services:
     volumes:
       - ..:/workspace
       - sweethome-cache:/workspace/build
+      - ~/.ssh:/root/.ssh
     ports:
       # VNC server
       - "5901:5901"
