@@ -1,175 +1,108 @@
-# Sweet Home 3D Dev Container
+# Sweet Home 3D Dev Container - Quick Start
 
-This directory contains the Docker Compose configuration for developing Sweet Home 3D locally.
+A complete Docker Compose dev environment for building and running Sweet Home 3D locally.
 
-## Quick Start
+## Getting Started (30 seconds)
 
-### Option 1: Using VS Code (Recommended)
-1. Install the "Dev Containers" extension in VS Code
-2. Open this folder in VS Code
-3. Click the green `><` icon in the bottom-left corner
-4. Select "Reopen in Container"
-5. Wait for the container to build (first time only)
+### Step 1: Open in VS Code
+1. Open this folder in VS Code
+2. Click the green `><` button (bottom-left)
+3. Select **"Reopen in Container"**
+4. Wait for the build to complete (first time only, ~2-3 min)
 
-### Option 2: Manual Docker Compose
+That's it! You're ready to build.
 
-```bash
-# Build the container
-docker-compose -f .devcontainer/docker-compose.yml up -d
+## Building the App
 
-# Connect to the container
-docker-compose -f .devcontainer/docker-compose.yml exec sweethome-dev bash
-```
-
-## Common Build Targets
-
-Once inside the container:
+Once the container is open, open a terminal in VS Code and run:
 
 ```bash
-# Build the main JAR executable (default)
+# Build the executable JAR
+build
+
+# Or use Ant directly
 ant jarExecutable
-
-# Build everything
-ant build
-
-# Build specific components
-ant application    # Build SweetHome3D.jar without applet classes
-ant furniture      # Build Furniture.jar
-ant textures       # Build Textures.jar
-ant examples       # Build Examples.jar
-ant help           # Build Help.jar
-
-# Clean build artifacts
-ant clean
-
-# View all available targets
-ant -projecthelp
 ```
 
-## Running the Application with GUI
+The built JAR will be in `install/SweetHome3D-*.jar`
 
-### Option 1: VNC Server + Client ⭐ **Recommended**
+## Running the App with GUI
+
+You'll need a VNC viewer on your local machine:
+- **macOS**: `brew install vnc-viewer`
+- **Ubuntu/Debian**: `sudo apt-get install tigervnc-viewer`
+- **Windows**: Download [RealVNC Viewer](https://www.realvnc.com/en/connect/download/viewer/)
+
+Then in the container:
 
 ```bash
-# Terminal 1 (in container): Start VNC server
+# Terminal 1: Start the VNC server
 start-vnc
 
-# Terminal 2 (in container): Build and run the app
-python build
+# Terminal 2: Build and run the app
+build
 export DISPLAY=:1
 java -jar install/SweetHome3D-*.jar
 ```
 
-**Then connect with a VNC viewer:**
-```bash
-# On your local machine
-vncviewer localhost:5901
+**On your local machine**, open your VNC viewer and connect to:
+```
+localhost:5901
 ```
 
-**Via Remote SSH + VS Code:**
-- VS Code will forward port 5901 automatically
-- Use any VNC viewer pointing to `localhost:5901`
-- Common viewers: RealVNC, TigerVNC, TightVNC
+You should see the SweetHome3D GUI!
 
-**Adjust display size:**
-```bash
-RESOLUTION=1920x1080 start-vnc
-```
+## Quick Commands
 
-### Option 2: Convenience Script
+All available from any container terminal:
 
-One-liner that starts VNC and runs the app:
-```bash
-run-with-vnc
-```
+| Command | What it does |
+|---------|-------------|
+| `build` | Build the main JAR executable |
+| `rebuild` | Clean and rebuild everything |
+| `clean` | Remove all build artifacts |
+| `start-vnc` | Start VNC server for GUI access |
+| `run-with-vnc` | Build and run with VNC in one command |
 
-Then connect with `vncviewer localhost:5901` from your machine.
+## Remote SSH + VS Code?
 
-### Option 3: Headless (No GUI)
+If you're using VS Code Remote SSH:
+1. VS Code automatically forwards port 5901
+2. Just follow the steps above
+3. Use any VNC viewer on your local machine
 
-Run without display:
-```bash
-java -Djava.awt.headless=true -jar install/SweetHome3D-*.jar
-```
+## SSH Access
 
-### Troubleshooting VNC
-
-**Port already in use:**
-```bash
-# Kill existing VNC processes
-pkill -f vnc
-pkill -f Xvfb
-```
-
-**Can't connect with VNC viewer:**
-- Check VS Code port forwarding (should show 5901 in Ports tab)
-- Try `localhost:5901` in your VNC viewer
-- Make sure a VNC viewer is installed locally
-
-**No VNC viewer installed?**
-```bash
-# On macOS
-brew install vnc-viewer
-
-# On Ubuntu/Debian
-sudo apt-get install tigervnc-viewer
-
-# Or download: https://www.realvnc.com/en/connect/download/viewer/
-```
-
-**GUI looks small/large:**
-```bash
-# Modify before running start-vnc
-RESOLUTION=1440x900 start-vnc
-```
-
-## Environment Details
-
-- **Java**: OpenJDK 11 (Eclipse Temurin)
-- **Build Tool**: Apache Ant
-- **Java 3D**: Included (lib/java3d-1.6/)
-- **Workspace**: `/workspace` (mounted from host)
-- **Build Cache**: Docker volume `sweethome-cache` (persistent between container starts)
-
-## VM Arguments for Development
-
-If you encounter issues with Java 16+, add these VM arguments:
-```
---add-opens=java.desktop/java.awt=ALL-UNNAMED
---add-opens=java.desktop/sun.awt=ALL-UNNAMED
---add-opens=java.desktop/com.apple.eio=ALL-UNNAMED
---add-opens=java.desktop/com.apple.eawt=ALL-UNNAMED
-```
-
-## Cleaning Up
+Your SSH keys are automatically available in the container. Just use git normally:
 
 ```bash
-# Stop the container
-docker-compose -f .devcontainer/docker-compose.yml down
-
-# Remove the container and volumes
-docker-compose -f .devcontainer/docker-compose.yml down -v
+git clone git@github.com:youruser/repo.git
+git push origin main
 ```
+
+SSH permissions are automatically fixed when the container starts.
+
+## Editing Code
+
+Edit files on your host machine (your preferred IDE). Changes are immediately visible in the container. Just rebuild to test!
+
+## More Details?
+
+See [README.old.md](README.old.md) for comprehensive documentation.
 
 ## Troubleshooting
 
-**Build fails with "cannot find symbol":**
-- Ensure all dependencies in `lib/` and `libtest/` are present
-- Try: `ant clean && ant jarExecutable`
+**VNC viewer won't connect?**
+- Make sure `start-vnc` is still running in Terminal 1
+- Check VS Code Ports tab (should show 5901)
+- Try killing old VNC: `pkill -f vnc; pkill -f Xvfb`
 
-**GUI not appearing:**
-- X11 forwarding is optional; the app builds fine headless
-- For Linux, ensure your host has X11 available and DISPLAY is set
+**Build fails?**
+- Try cleaning first: `clean` then `build`
+- Check that `lib/` and `libtest/` directories have content
 
-**Out of memory errors:**
-- Increase ANT_OPTS in docker-compose.yml
-- Change `-Xmx2048m` to a larger value (e.g., `-Xmx4096m`)
+**Can't see SweetHome3D window?**
+- Make sure you set `export DISPLAY=:1` before running the JAR
+- VNC viewer must be connected first
 
-## Making Modifications
-
-The workspace directory is mounted as a volume, so:
-1. Edit files on your host machine with your preferred IDE
-2. Changes are immediately visible in the container
-3. Run builds from within the container to test your changes
-
-Good luck with your Sweet Home 3D modifications!
+Enjoy!
