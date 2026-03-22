@@ -29,14 +29,22 @@ public class CostEstimatorAction extends PluginAction {
 
   @Override
   public void execute() {
+    System.err.println("[CostEstimatorAction] Execute called");
     SwingUtilities.invokeLater(new Runnable() {
       @Override
       public void run() {
-        CostEstimatorDialog dialog = new CostEstimatorDialog(
-            null,
-            plugin.getHome(),
-            plugin.getUserPreferences());
-        dialog.setVisible(true);
+        try {
+          System.err.println("[CostEstimatorAction] Creating dialog...");
+          CostEstimatorDialog dialog = new CostEstimatorDialog(
+              null,
+              plugin.getHome(),
+              plugin.getUserPreferences());
+          System.err.println("[CostEstimatorAction] Showing dialog...");
+          dialog.setVisible(true);
+        } catch (Exception e) {
+          System.err.println("[CostEstimatorAction] ERROR:");
+          e.printStackTrace(System.err);
+        }
       }
     });
   }
