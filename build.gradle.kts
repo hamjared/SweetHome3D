@@ -1,0 +1,154 @@
+plugins {
+    java
+    application
+}
+
+group = "com.eteks"
+version = "7.7-Online"
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+repositories {
+    mavenCentral()
+    // Java 3D from JogAmp - use correct URLs
+    maven {
+        url = uri("https://www.jogamp.org/deployment/maven")
+    }
+}
+
+sourceSets {
+    main {
+        java.srcDirs("src")
+        resources.srcDirs("src")
+    }
+    test {
+        java.srcDirs("test")
+    }
+}
+
+dependencies {
+    // Java 3D from lib/ (shipped with project)
+    implementation(files("lib/java3d-1.6/j3dcore.jar"))
+    implementation(files("lib/java3d-1.6/j3dutils.jar"))
+    implementation(files("lib/java3d-1.6/vecmath.jar"))
+    implementation(files("lib/java3d-1.6/gluegen-rt.jar"))
+    implementation(files("lib/java3d-1.6/jogl-all.jar"))
+
+    // SVG and PDF
+    implementation("com.lowagie:itext:2.1.7")
+
+    // Local/custom dependencies
+    implementation(files("lib/batik-svgpathparser-1.7.jar"))
+    implementation(files("lib/jeksparser-calculator.jar"))
+    implementation(files("lib/jmf.jar"))
+    implementation(files("lib/freehep-vectorgraphics-svg-2.1.1c.jar"))
+    implementation(files("lib/sunflow-0.07.3i.jar"))
+
+    // Compile-only (not needed at runtime on modern Java)
+    compileOnly(files("libtest/AppleJavaExtensions.jar"))
+    // JNLP needed only for applet/web start (gracefully degrades if missing)
+    implementation(files("libtest/jnlp.jar"))
+
+    // Test dependencies
+    testImplementation(files("libtest/abbot.jar"))
+    testImplementation(files("libtest/gnu-regexp-1.1.4.jar"))
+    testImplementation("org.jdom:jdom:1.1.1")
+    testImplementation("jdepend:jdepend:2.9")
+}
+
+tasks.test {
+    useJUnit()
+}
+
+// Fat JAR task - bundles all dependencies and native libraries
+tasks.register<Jar>("jarExecutable") {
+    group = "build"
+    description = "Build self-contained executable JAR with all dependencies"
+
+    archiveFileName.set("SweetHome3D-${version}.jar")
+    destinationDirectory.set(file("$buildDir/libs"))
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    manifest {
+        attributes(
+            "Main-Class" to "com.eteks.sweethome3d.SweetHome3DBootstrap",
+            "Add-opens" to "java.desktop/java.awt java.desktop/sun.awt java.desktop/com.apple.eio java.desktop/com.apple.eawt",
+            "Implementation-Title" to "Sweet Home 3D",
+            "Implementation-Version" to version,
+            "Implementation-Vendor" to "Space Mushrooms"
+        )
+    }
+
+    // Include all compiled classes
+    from(sourceSets.main.get().output)
+
+    // Include all runtime dependencies
+    val runtimeClasspath = configurations.runtimeClasspath.get()
+    from(runtimeClasspath.map { if (it.isDirectory) it else zipTree(it) }) {
+        // Prevent duplicates of manifest files and signatures
+        exclude("META-INF/*.SF")
+        exclude("META-INF/*.DSA")
+        exclude("META-INF/*.RSA")
+        exclude("META-INF/MANIFEST.MF")
+    }
+
+    // Include native libraries
+    from("lib/java3d-1.6/linux/amd64") {
+        into("lib/java3d-1.6/linux/amd64")
+        include("*.so")
+    }
+    from("lib/java3d-1.6/linux/i586") {
+        into("lib/java3d-1.6/linux/i586")
+        include("*.so")
+    }
+    from("lib/java3d-1.6/windows/x64") {
+        into("lib/java3d-1.6/windows/x64")
+        include("*.dll")
+    }
+    from("lib/java3d-1.6/windows/i386") {
+        into("lib/java3d-1.6/windows/i386")
+        include("*.dll")
+    }
+    from("lib/java3d-1.6/macosx") {
+        into("lib/java3d-1.6/macosx")
+        include("*.jnilib", "*.dylib")
+    }
+
+    // Include YafaRay native libraries
+    from("lib/yafaray/linux/x64") {
+        into("lib/yafaray/linux/x64")
+        include("*.so")
+    }
+    from("lib/yafaray/windows/x64") {
+        into("lib/yafaray/windows/x64")
+        include("*.dll")
+    }
+    from("lib/yafaray/macosx") {
+        into("lib/yafaray/macosx")
+        include("*.jnilib", "*.dylib")
+    }
+
+    doLast {
+        // Copy to install directory
+        val installDir = file("install")
+        installDir.mkdirs()
+        copy {
+            from(archiveFile)
+            into(installDir)
+        }
+        println("✓ Built: ${installDir}/${archiveFileName.get()}")
+    }
+}
+
+// Copy jarExecutable output to install/ directory
+tasks.build {
+    dependsOn("jarExecutable")
+}
+
+application {
+    mainClass.set("com.eteks.sweethome3d.SweetHome3DBootstrap")
+}

@@ -1,7 +1,8 @@
 FROM eclipse-temurin:21-jdk-noble
 
-# Install Ant, Python, and necessary build tools
+# Install Gradle, Ant, Python, and necessary build tools
 RUN apt-get update && apt-get install -y \
+    gradle \
     ant \
     ant-contrib \
     git \
