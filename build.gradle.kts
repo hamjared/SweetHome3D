@@ -168,11 +168,8 @@ tasks.register<Jar>("costEstimatorPlugin") {
     }
 
     // Copy ApplicationPlugin.properties to root for plugin discovery
-    from(sourceSets.main.get().output.resourcesDir) {
-        include("com/eteks/sweethome3d/plugin/costestimator/ApplicationPlugin.properties")
-        eachFile { file ->
-            file.path = file.name  // Strip all path components, keep only filename at root
-        }
+    from(sourceSets.main.get().output.resourcesDir.dir("com/eteks/sweethome3d/plugin/costestimator")) {
+        include("ApplicationPlugin.properties")
     }
 
     manifest {
