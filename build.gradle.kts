@@ -149,11 +149,16 @@ tasks.register<Jar>("costEstimatorPlugin") {
     group = "build"
     description = "Build Cost Estimator plugin JAR"
 
+    dependsOn("classes", "processResources")
+
     archiveFileName.set("CostEstimatorPlugin.jar")
     destinationDirectory.set(file("$buildDir/plugins"))
 
-    // Include plugin classes
-    from(sourceSets.main.get().output) {
+    // Include plugin classes and resources (properties files)
+    from(sourceSets.main.get().output.classesDirs) {
+        include("com/eteks/sweethome3d/plugin/costestimator/**")
+    }
+    from(sourceSets.main.get().output.resourcesDir) {
         include("com/eteks/sweethome3d/plugin/costestimator/**")
     }
 
