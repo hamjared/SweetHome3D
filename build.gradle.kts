@@ -154,18 +154,25 @@ tasks.register<Jar>("costEstimatorPlugin") {
     archiveFileName.set("CostEstimatorPlugin.jar")
     destinationDirectory.set(file("$buildDir/plugins"))
 
-    // Include plugin classes and resources (properties files)
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    // Include plugin classes
     from(sourceSets.main.get().output.classesDirs) {
         include("com/eteks/sweethome3d/plugin/costestimator/**")
     }
+
+    // Include plugin resources except ApplicationPlugin.properties (handled separately)
     from(sourceSets.main.get().output.resourcesDir) {
         include("com/eteks/sweethome3d/plugin/costestimator/**")
+        exclude("**/ApplicationPlugin.properties")
     }
 
     // ApplicationPlugin.properties must be at JAR root for plugin discovery
     from(sourceSets.main.get().output.resourcesDir) {
         include("com/eteks/sweethome3d/plugin/costestimator/ApplicationPlugin.properties")
-        into("")  // Move to root
+        eachFile { file ->
+            file.path = file.name  // Move to root
+        }
     }
 
     manifest {
