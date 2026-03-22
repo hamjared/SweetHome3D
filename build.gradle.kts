@@ -161,15 +161,16 @@ tasks.register<Jar>("costEstimatorPlugin") {
         include("com/eteks/sweethome3d/plugin/costestimator/**")
     }
 
-    // Include plugin resources in package directory
+    // Include plugin resources in package directory (except ApplicationPlugin.properties)
     from(sourceSets.main.get().output.resourcesDir) {
         include("com/eteks/sweethome3d/plugin/costestimator/**")
+        exclude("com/eteks/sweethome3d/plugin/costestimator/ApplicationPlugin.properties")
     }
 
-    // Also copy ApplicationPlugin.properties to root for plugin discovery
+    // Copy ApplicationPlugin.properties to root for plugin discovery
     from(sourceSets.main.get().output.resourcesDir) {
         include("com/eteks/sweethome3d/plugin/costestimator/ApplicationPlugin.properties")
-        into("/")  // Put at root
+        into("/")
     }
 
     manifest {
