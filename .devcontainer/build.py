@@ -49,10 +49,10 @@ def run_in_container(cmd):
         docker_cmd.extend(['exec', 'sweethome-dev', 'bash', '-c', cmd])
         return subprocess.run(docker_cmd, check=False)
 
-def build_target(target):
-    """Build a specific Ant target"""
-    print_status(f"Building: {target}")
-    result = run_in_container(f"ant {target}")
+def build_gradle():
+    """Build Gradle jar executable"""
+    print_status("Building: jarExecutable")
+    result = run_in_container("./gradlew jarExecutable")
     if result.returncode == 0:
         print_status("Build successful!")
     return result.returncode
@@ -60,7 +60,7 @@ def build_target(target):
 def clean():
     """Clean build artifacts"""
     print_status("Cleaning build artifacts")
-    result = run_in_container("ant clean")
+    result = run_in_container("./gradlew clean")
     if result.returncode == 0:
         print_status("Clean successful!")
     return result.returncode
@@ -68,7 +68,7 @@ def clean():
 def rebuild():
     """Clean and rebuild"""
     print_status("Rebuilding (clean + build)")
-    result = run_in_container("ant clean && ant jarExecutable")
+    result = run_in_container("./gradlew clean jarExecutable")
     if result.returncode == 0:
         print_status("Rebuild successful!")
     return result.returncode
@@ -77,7 +77,7 @@ def run_app():
     """Build and run the application"""
     if is_in_container():
         print_status("Building and running application")
-        result = subprocess.run("ant jarExecutable", shell=True, check=False)
+        result = subprocess.run("./gradlew jarExecutable", shell=True, check=False)
         if result.returncode != 0:
             print_error("Build failed")
             return 1
@@ -93,7 +93,7 @@ def run_app():
         return subprocess.run([sys.executable, '-c', f'import subprocess; subprocess.run(["java", "-jar", "{jar_file}"])'], check=False).returncode
     else:
         docker_cmd = get_docker_compose_cmd()
-        docker_cmd.extend(['exec', 'sweethome-dev', 'bash', '-c', 'ant jarExecutable && java -jar install/SweetHome3D-*.jar'])
+        docker_cmd.extend(['exec', 'sweethome-dev', 'bash', '-c', './gradlew jarExecutable && java -jar install/SweetHome3D-*.jar'])
         return subprocess.run(docker_cmd, check=False).returncode
 
 def start_container():
@@ -142,20 +142,15 @@ def show_logs():
 def show_help():
     """Display help message"""
     help_text = """
-Sweet Home 3D Build Helper
+Sweet Home 3D Build Helper (Gradle)
 
 Usage: python build.py [COMMAND] [OPTIONS]
 
 COMMANDS:
-  build           Build the main JAR executable (default)
-  application     Build SweetHome3D.jar without applet classes
-  furniture       Build Furniture.jar
-  textures        Build Textures.jar
-  examples        Build Examples.jar
-  help-jar        Build Help.jar
+  build           Build the main JAR executable with Gradle (default)
   clean           Clean build artifacts
   rebuild         Clean and rebuild
-  run             Run the built JAR
+  run             Build and run the application
   start           Start the dev container
   stop            Stop the dev container
   shell           Open a shell in the dev container
@@ -200,17 +195,7 @@ def main():
     command = args.command
 
     if command == 'build':
-        return build_target('jarExecutable')
-    elif command == 'application':
-        return build_target('application')
-    elif command == 'furniture':
-        return build_target('furniture')
-    elif command == 'textures':
-        return build_target('textures')
-    elif command == 'examples':
-        return build_target('examples')
-    elif command == 'help-jar':
-        return build_target('help')
+        return build_gradle()
     elif command == 'clean':
         return clean()
     elif command == 'rebuild':
