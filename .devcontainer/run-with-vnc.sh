@@ -1,5 +1,5 @@
 #!/bin/bash
-# Convenience script to start VNC and run SweetHome3D
+# Convenience script to start VNC and run SweetHome3D with Cost Estimator plugin
 
 # Start VNC in the background
 .devcontainer/start-vnc.sh &
@@ -10,14 +10,22 @@ echo "Waiting for VNC server to start..."
 sleep 3
 
 # Build if needed
-if [ ! -f "install/SweetHome3D-*.jar" ]; then
+if [ ! -f "install/SweetHome3D-"*.jar ]; then
     echo "Building SweetHome3D..."
-    ant jarExecutable
+    ./gradlew jarExecutable
 fi
+
+# Setup Cost Estimator plugin
+echo "Setting up Cost Estimator plugin..."
+mkdir -p ~/.sweethome3d/plugins
+cp install/plugins/CostEstimatorPlugin.jar ~/.sweethome3d/plugins/
+echo "✓ Plugin installed"
 
 # Run SweetHome3D with display
 echo ""
-echo "🚀 Launching SweetHome3D..."
+echo "🚀 Launching SweetHome3D with Cost Estimator..."
+echo "   Tools → Cost Estimator... will be available"
+echo ""
 export DISPLAY=:1
 java -jar install/SweetHome3D-*.jar
 
