@@ -1,0 +1,40 @@
+name: Test Build
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Compile with Gradle
+        run: ./gradlew compileJava
+
+      - name: Build JAR
+        run: ./gradlew jarExecutable
+
+      - name: Verify artifacts
+        run: |
+          if [ ! -f "install/SweetHome3D-7.7-Online.jar" ]; then
+            echo "Main JAR not found!"
+            exit 1
+          fi
+          if [ ! -f "install/plugins/CostEstimatorPlugin.jar" ]; then
+            echo "Plugin JAR not found!"
+            exit 1
+          fi
+          echo "✓ Main JAR: $(ls -lh install/SweetHome3D-7.7-Online.jar | awk '{print $5}')"
+          echo "✓ Plugin JAR: $(ls -lh install/plugins/CostEstimatorPlugin.jar | awk '{print $5}')"
