@@ -33,35 +33,89 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "VERSION=$VERSION"
 
-      - name: Create Release and Upload JARs
+      - name: Create distribution with pre-bundled plugin
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          DIST_DIR="build/dist/SweetHome3D-${VERSION}"
+          mkdir -p "$DIST_DIR/plugins"
+
+          # Copy main JAR
+          cp "install/SweetHome3D-${VERSION}.jar" "$DIST_DIR/"
+
+          # Copy plugin JAR to plugins directory
+          cp "install/plugins/CostEstimatorPlugin.jar" "$DIST_DIR/plugins/"
+
+          # Create run script for Linux/Mac
+          cat > "$DIST_DIR/run.sh" << 'EOF'
+          #!/bin/bash
+          DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+          java -jar "$DIR/SweetHome3D-*.jar"
+          EOF
+          chmod +x "$DIST_DIR/run.sh"
+
+          # Create run script for Windows
+          cat > "$DIST_DIR/run.bat" << 'EOF'
+          @echo off
+          cd /d "%~dp0"
+          for /f %%F in ('dir /b SweetHome3D-*.jar') do (
+              java -jar "%%F"
+              exit /b !ERRORLEVEL!
+          )
+          EOF
+
+          # Create README
+          cat > "$DIST_DIR/README.txt" << 'EOF'
+          Sweet Home 3D v${{ steps.version.outputs.version }}
+
+          Cost Estimator plugin is pre-installed and ready to use!
+
+          To run:
+          - Linux/Mac: ./run.sh
+          - Windows: run.bat
+          - Or: java -jar SweetHome3D-*.jar
+
+          The Cost Estimator is available under Tools menu when you have a floor plan open.
+          EOF
+
+          echo "Distribution created in $DIST_DIR"
+
+      - name: Create Release and Upload
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ steps.version.outputs.version }}
           draft: false
           files: |
-            ./install/SweetHome3D-${{ steps.version.outputs.version }}-with-plugin.jar
-            ./install/SweetHome3D-${{ steps.version.outputs.version }}.jar
-            ./install/plugins/CostEstimatorPlugin.jar
+            build/dist/SweetHome3D-${{ steps.version.outputs.version }}/SweetHome3D-${{ steps.version.outputs.version }}.jar
+            build/dist/SweetHome3D-${{ steps.version.outputs.version }}/plugins/CostEstimatorPlugin.jar
+            build/dist/SweetHome3D-${{ steps.version.outputs.version }}/run.sh
+            build/dist/SweetHome3D-${{ steps.version.outputs.version }}/run.bat
+            build/dist/SweetHome3D-${{ steps.version.outputs.version }}/README.txt
           body: |
             ## Automated Build Release
 
             Built from commit: ${{ github.sha }}
 
-            ### Downloads
+            ### Quick Start
 
-            #### Windows (Recommended for Windows)
-            - **SweetHome3D-${{ steps.version.outputs.version }}-installer.exe** - Windows installer (includes JRE, no Java installation needed)
+            **Option 1: Windows Installer (Recommended)**
+            - Download: `SweetHome3D-${{ steps.version.outputs.version }}-installer.exe`
+            - Just run the installer, no Java installation needed!
 
-            #### Cross-Platform (Java Required)
-            - **SweetHome3D-${{ steps.version.outputs.version }}-with-plugin.jar** - Everything bundled (recommended)
-              - Run: `java -jar SweetHome3D-${{ steps.version.outputs.version }}-with-plugin.jar`
-            - **SweetHome3D-${{ steps.version.outputs.version }}.jar** - Main app only
-            - **CostEstimatorPlugin.jar** - Plugin only
+            **Option 2: Cross-Platform Bundle (requires Java 21)**
+            - Download all files: `SweetHome3D-${{ steps.version.outputs.version }}.jar`, `run.sh`, and `CostEstimatorPlugin.jar`
+            - Extract to a folder
+            - Run: `./run.sh` (Linux/Mac) or `run.bat` (Windows)
+
+            **Option 3: Standalone JAR**
+            - Download just `SweetHome3D-${{ steps.version.outputs.version }}.jar`
+            - Run: `java -jar SweetHome3D-${{ steps.version.outputs.version }}.jar`
+            - Plugin: Download `CostEstimatorPlugin.jar` and place in `~/.sweethome3d/plugins/`
 
             ### Features
             - ✅ Java 21 LTS
             - ✅ Gradle build system
-            - ✅ Cost Estimator plugin (framing, drywall, electrical, plumbing cost estimation)
+            - ✅ Cost Estimator plugin pre-installed (Tools → Cost Estimator...)
+            - ✅ Calculates: Framing, drywall, paint, flooring, electrical, plumbing, doors, windows
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -81,6 +135,15 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew jarExecutableWithPlugin
 
+      - name: Prepare plugin for installer
+        shell: pwsh
+        run: |
+          $VERSION = ((Get-Content build.gradle.kts | Select-String 'version = "([^"]+)"').Matches[0].Groups[1].Value)
+          $APP_DIR = "build/app/SweetHome3D/plugins"
+          New-Item -ItemType Directory -Path $APP_DIR -Force | Out-Null
+          Copy-Item "install/plugins/CostEstimatorPlugin.jar" $APP_DIR
+          Write-Host "✓ Plugin prepared for installer"
+
       - name: Create Windows installer
         shell: pwsh
         run: |
@@ -97,7 +160,7 @@ jobs:
           $JAVA_HOME = $env:JAVA_HOME
           Write-Host "JAVA_HOME: $JAVA_HOME"
 
-          # Build installer using jpackage
+          # Build installer using jpackage with app content
           & "$JAVA_HOME/bin/jpackage.exe" `
             --input install `
             --name SweetHome3D `
@@ -108,6 +171,7 @@ jobs:
             --app-version $VERSION `
             --vendor "Space Mushrooms" `
             --description "Sweet Home 3D - Interior 2D design with Cost Estimator and native Java3D rendering" `
+            --app-content "build/app/SweetHome3D" `
             --win-menu `
             --win-menu-group "SweetHome3D" `
             --win-shortcut
