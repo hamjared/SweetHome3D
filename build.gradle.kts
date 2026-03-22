@@ -133,7 +133,7 @@ tasks.register<Jar>("jarExecutable") {
     }
 
     doLast {
-        // Copy to install directory
+        // Copy main JAR to install directory
         val installDir = file("install")
         installDir.mkdirs()
         copy {
@@ -166,8 +166,20 @@ tasks.register<Jar>("costEstimatorPlugin") {
 
     doLast {
         val pluginDir = file("$buildDir/plugins")
+        val installPluginDir = file("install/plugins")
+        installPluginDir.mkdirs()
+        copy {
+            from(archiveFile)
+            into(installPluginDir)
+        }
         println("✓ Built: ${pluginDir}/${archiveFileName.get()}")
+        println("✓ Copied to: ${installPluginDir}/${archiveFileName.get()}")
     }
+}
+
+// Make jarExecutable depend on costEstimatorPlugin
+tasks.named("jarExecutable") {
+    dependsOn("costEstimatorPlugin")
 }
 
 // Copy jarExecutable output to install/ directory
