@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.eteks"
-version = "7.7-Online"
+version = "8.0"
 
 java {
     toolchain {
