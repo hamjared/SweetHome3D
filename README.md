@@ -88,7 +88,15 @@ Edit files on your host machine (your preferred IDE). Changes are immediately vi
 
 ## More Details?
 
-See [README.old.md](README.old.md) for comprehensive documentation and [.devcontainer/README.old.md](.devcontainer/README.old.md) for detailed devcontainer setup.
+See [docs/README.old.md](docs/README.old.md) for comprehensive documentation and [.devcontainer/README.old.md](.devcontainer/README.old.md) for detailed devcontainer setup.
+
+## Licensing
+
+Sweet Home 3D is licensed under the **GNU General Public License v2+**.
+
+- Main license: [licenses/LICENSE.TXT](licenses/LICENSE.TXT)
+- GNU GPL full text: [licenses/COPYING.TXT](licenses/COPYING.TXT)
+- Third-party licenses: See [licenses/](licenses/) folder for all dependencies
 
 ## Troubleshooting
 
