@@ -31,6 +31,9 @@ import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.UndoableEdit;
 import javax.swing.undo.UndoableEditSupport;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.eteks.sweethome3d.model.Baseboard;
 import com.eteks.sweethome3d.model.Home;
 import com.eteks.sweethome3d.model.HomeTexture;
@@ -44,6 +47,7 @@ import com.eteks.sweethome3d.model.Wall;
  * @author Emmanuel Puybaret
  */
 public class WallController implements Controller {
+  private static final Logger LOGGER = LogManager.getLogger("sweethome.wall-finished");
   /**
    * The properties that may be edited by the view associated to this controller.
    */
@@ -1329,6 +1333,8 @@ public class WallController implements Controller {
     List<Selectable> oldSelection = this.home.getSelectedItems();
     List<Wall> selectedWalls = Home.getWallsSubList(oldSelection);
     if (!selectedWalls.isEmpty()) {
+      LOGGER.debug("Modifying {} wall(s), leftSideFinished={}, rightSideFinished={}",
+          selectedWalls.size(), getLeftSideFinished(), getRightSideFinished());
       Float xStart = getXStart();
       Float yStart = getYStart();
       Float xEnd = getXEnd();

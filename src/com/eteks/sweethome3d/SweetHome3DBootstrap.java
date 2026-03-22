@@ -40,6 +40,9 @@ import java.util.zip.ZipFile;
 
 import javax.swing.JOptionPane;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.eteks.sweethome3d.tools.ExtensionsClassLoader;
 
 /**
@@ -48,8 +51,17 @@ import com.eteks.sweethome3d.tools.ExtensionsClassLoader;
  * @author Emmanuel Puybaret
  */
 public class SweetHome3DBootstrap {
+  private static final Logger LOGGER = LogManager.getLogger("sweethome.startup");
+
   public static void main(String [] args) throws MalformedURLException, IllegalAccessException,
         InvocationTargetException, NoSuchMethodException, ClassNotFoundException {
+
+    LOGGER.info("Bootstrap starting");
+    Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+      public void uncaughtException(Thread thread, Throwable throwable) {
+        LOGGER.error("Uncaught exception in thread: {}", thread.getName(), throwable);
+      }
+    });
     Class<?> sweetHome3DBootstrapClass = SweetHome3DBootstrap.class;
     List<String> extensionJarsAndDlls = new ArrayList<String>(Arrays.asList(new String [] {
         "batik-svgpathparser-1.7.jar", // Jars included in Sweet Home 3D executable jar file
@@ -75,8 +87,8 @@ public class SweetHome3DBootstrap {
         // Refuse to let Sweet Home 3D run under Mac OS X with Java Web Start 6
         String message = Locale.getDefault().getLanguage().equals(Locale.FRENCH.getLanguage())
             ? "Sweet Home 3D ne peut pas fonctionner avec Java\n"
-              + "Web Start 6 sous Mac OS X de façon fiable.\n"
-              + "Merci de télécharger le programme d'installation depuis\n"
+              + "Web Start 6 sous Mac OS X de faï¿½on fiable.\n"
+              + "Merci de tï¿½lï¿½charger le programme d'installation depuis\n"
               + "http://www.sweethome3d.com/fr/download.jsp"
             : "Sweet Home 3D can't reliably run with Java Web Start 6\n"
               + "under Mac OS X.\n"
@@ -104,8 +116,8 @@ public class SweetHome3DBootstrap {
         // Refuse to let Sweet Home 3D run under Mac OS X with Java 7
         String message = Locale.getDefault().getLanguage().equals(Locale.FRENCH.getLanguage())
             ? "Sweet Home 3D ne peut fonctionner avec Java 6/7 sur votre\n"
-              + "système et requiert Java 8 ou plus. Merci de mettre à jour votre\n"
-              + "version de Java ou de télécharger le programme d'installation\n"
+              + "systï¿½me et requiert Java 8 ou plus. Merci de mettre ï¿½ jour votre\n"
+              + "version de Java ou de tï¿½lï¿½charger le programme d'installation\n"
               + "depuis http://www.sweethome3d.com/fr/download.jsp"
             : "Sweet Home 3D can't run with Java 6/7 under your system\n"
               + "and requires Java 8 or above. Please, update you Java version\n"
@@ -321,11 +333,19 @@ public class SweetHome3DBootstrap {
         ex.printStackTrace();
       }
     }
+    LOGGER.debug("Loading application class: {}", applicationClassName);
     Class<?> applicationClass = java3DClassLoader.loadClass(applicationClassName);
+    LOGGER.debug("Application class loaded, invoking main()");
     Method applicationClassMain =
         applicationClass.getMethod("main", Array.newInstance(String.class, 0).getClass());
     // Call application class main method with reflection
-    applicationClassMain.invoke(null, new Object [] {args});
+    try {
+      applicationClassMain.invoke(null, new Object [] {args});
+      LOGGER.debug("Application main() returned");
+    } catch (java.lang.reflect.InvocationTargetException ex) {
+      LOGGER.error("Exception from application main()", ex.getCause());
+      throw ex;
+    }
   }
 
   private static String copyFileToFolder(URL url, File folder) throws IOException, URISyntaxException {

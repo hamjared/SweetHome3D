@@ -27,11 +27,15 @@ import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
  * A wall of a home plan.
  * @author Emmanuel Puybaret
  */
 public class Wall extends HomeObject implements Selectable, Elevatable {
+  private static final Logger LOGGER = LogManager.getLogger("sweethome.wall-finished");
   /**
    * The properties of a wall that may change. <code>PropertyChangeListener</code>s added
    * to a wall will be notified under a property name equal to the string value of one these properties.
@@ -1251,6 +1255,7 @@ public class Wall extends HomeObject implements Selectable, Elevatable {
    */
   public void setLeftSideFinished(boolean leftSideFinished) {
     if (leftSideFinished != this.leftSideFinished) {
+      LOGGER.debug("Wall {} left side finished: {}", getId(), leftSideFinished);
       this.leftSideFinished = leftSideFinished;
       firePropertyChange(Property.LEFT_SIDE_FINISHED.name(), !leftSideFinished, leftSideFinished);
     }
@@ -1269,6 +1274,7 @@ public class Wall extends HomeObject implements Selectable, Elevatable {
    */
   public void setRightSideFinished(boolean rightSideFinished) {
     if (rightSideFinished != this.rightSideFinished) {
+      LOGGER.debug("Wall {} right side finished: {}", getId(), rightSideFinished);
       this.rightSideFinished = rightSideFinished;
       firePropertyChange(Property.RIGHT_SIDE_FINISHED.name(), !rightSideFinished, rightSideFinished);
     }

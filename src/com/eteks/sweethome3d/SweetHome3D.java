@@ -77,6 +77,8 @@ import javax.swing.UIManager;
 import javax.swing.border.Border;
 import javax.swing.plaf.basic.BasicSplitPaneDivider;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.xml.sax.SAXException;
 
 import com.eteks.sweethome3d.applet.AppletContentManager;
@@ -177,6 +179,8 @@ import com.eteks.sweethome3d.viewcontroller.ViewFactory;
  * @author Emmanuel Puybaret
  */
 public class SweetHome3D extends HomeApplication {
+  private static final Logger LOGGER = LogManager.getLogger("sweethome.startup");
+
   private static final String     PREFERENCES_FOLDER             = "com.eteks.sweethome3d.preferencesFolder";
   private static final String     APPLICATION_FOLDERS            = "com.eteks.sweethome3d.applicationFolders";
   private static final String     APPLICATION_PLUGINS_SUB_FOLDER = "plugins";
@@ -664,6 +668,11 @@ public class SweetHome3D extends HomeApplication {
    *          following a <code>-open</code> option.
    */
   public static void main(final String [] args) {
+    Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+      public void uncaughtException(Thread thread, Throwable throwable) {
+        LOGGER.error("Uncaught exception in thread: {}", thread.getName(), throwable);
+      }
+    });
     new SweetHome3D().init(args);
   }
 
@@ -671,6 +680,8 @@ public class SweetHome3D extends HomeApplication {
    * Inits application instance.
    */
   protected void init(final String [] args) {
+    LOGGER.info("SweetHome3D starting (os={}, java={})",
+        System.getProperty("os.name"), System.getProperty("java.version"));
     initSystemProperties();
 
     // If Sweet Home 3D is launched from outside of Java Web Start
@@ -722,7 +733,9 @@ public class SweetHome3D extends HomeApplication {
             Home home = ev.getItem();
             home.setFurnitureAdditionalProperties(getFurnitureAdditionalProperties());
             try {
+              LOGGER.info("Opening home: {}", home.getName() != null ? home.getName() : "<new>");
               HomeFrameController controller = createHomeFrameController(home);
+              LOGGER.debug("Displaying home frame view");
               controller.displayView();
               if (!this.firstApplicationHomeAdded) {
                 this.firstApplicationHomeAdded = true;
@@ -766,6 +779,7 @@ public class SweetHome3D extends HomeApplication {
 
     addComponent3DRenderingErrorObserver();
 
+    LOGGER.debug("Initializing user preferences");
     getUserPreferences();
     try {
       // Set User Agent to follow statistics on used operating systems
@@ -776,8 +790,10 @@ public class SweetHome3D extends HomeApplication {
     }
     // Init look and feel afterwards to ensure that Swing takes into account
     // default locale change
+    LOGGER.debug("Initializing look and feel");
     initLookAndFeel();
     try {
+      LOGGER.debug("Initializing auto-recovery manager");
       this.autoRecoveryManager = new AutoRecoveryManager(this);
     } catch (RecorderException ex) {
       // Too bad we can't retrieve homes to recover
@@ -789,9 +805,15 @@ public class SweetHome3D extends HomeApplication {
     }
 
     // Run everything else in Event Dispatch Thread
+    LOGGER.debug("Scheduling application start on EDT");
     EventQueue.invokeLater(new Runnable() {
       public void run() {
-        SweetHome3D.this.start(args);
+        try {
+          SweetHome3D.this.start(args);
+          LOGGER.info("Application started");
+        } catch (Throwable t) {
+          LOGGER.error("Exception during application start", t);
+        }
       }
     });
   }
