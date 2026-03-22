@@ -144,6 +144,32 @@ tasks.register<Jar>("jarExecutable") {
     }
 }
 
+// Cost Estimator Plugin JAR
+tasks.register<Jar>("costEstimatorPlugin") {
+    group = "build"
+    description = "Build Cost Estimator plugin JAR"
+
+    archiveFileName.set("CostEstimatorPlugin.jar")
+    destinationDirectory.set(file("$buildDir/plugins"))
+
+    // Include plugin classes
+    from(sourceSets.main.get().output) {
+        include("com/eteks/sweethome3d/plugin/costestimator/**")
+    }
+
+    manifest {
+        attributes(
+            "Implementation-Title" to "Cost Estimator Plugin",
+            "Implementation-Version" to version
+        )
+    }
+
+    doLast {
+        val pluginDir = file("$buildDir/plugins")
+        println("✓ Built: ${pluginDir}/${archiveFileName.get()}")
+    }
+}
+
 // Copy jarExecutable output to install/ directory
 tasks.build {
     dependsOn("jarExecutable")
