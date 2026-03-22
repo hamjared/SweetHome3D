@@ -52,7 +52,7 @@ public class WallController implements Controller {
       RIGHT_SIDE_COLOR, RIGHT_SIDE_PAINT, RIGHT_SIDE_SHININESS,
       PATTERN, TOP_COLOR, TOP_PAINT,
       SHAPE, RECTANGULAR_WALL_HEIGHT, SLOPING_WALL_HEIGHT_AT_START, SLOPING_WALL_HEIGHT_AT_END,
-      THICKNESS, ARC_EXTENT_IN_DEGREES}
+      THICKNESS, ARC_EXTENT_IN_DEGREES, LEFT_SIDE_FINISHED, RIGHT_SIDE_FINISHED}
   /**
    * The possible values for {@linkplain #getShape() wall shape}.
    */
@@ -96,6 +96,8 @@ public class WallController implements Controller {
   private Float        sloppingWallHeightAtEnd;
   private Float        thickness;
   private Float        arcExtentInDegrees;
+  private Boolean          leftSideFinished;
+  private Boolean          rightSideFinished;
 
   /**
    * Creates the controller of wall view with undo support.
@@ -251,6 +253,8 @@ public class WallController implements Controller {
       setShape(null);
       setThickness(null);
       setArcExtentInDegrees(null);
+      setLeftSideFinished(null);
+      setRightSideFinished(null);
     } else {
       // Search the common properties among selected walls
       Wall firstWall = selectedWalls.get(0);
@@ -712,6 +716,19 @@ public class WallController implements Controller {
       } else {
         setArcExtentInDegrees(selectedWalls.size() == 1 ? new Float(0) : null);
       }
+
+      Boolean leftSideFinished = firstWall.isLeftSideFinished();
+      Boolean rightSideFinished = firstWall.isRightSideFinished();
+      for (int i = 1; i < selectedWalls.size(); i++) {
+        if (leftSideFinished != null && leftSideFinished != selectedWalls.get(i).isLeftSideFinished()) {
+          leftSideFinished = null;
+        }
+        if (rightSideFinished != null && rightSideFinished != selectedWalls.get(i).isRightSideFinished()) {
+          rightSideFinished = null;
+        }
+      }
+      setLeftSideFinished(leftSideFinished);
+      setRightSideFinished(rightSideFinished);
     }
   }
 
@@ -1261,6 +1278,30 @@ public class WallController implements Controller {
     return this.arcExtentInDegrees;
   }
 
+  public void setLeftSideFinished(Boolean leftSideFinished) {
+    if (leftSideFinished != this.leftSideFinished) {
+      Boolean oldLeftSideFinished = this.leftSideFinished;
+      this.leftSideFinished = leftSideFinished;
+      this.propertyChangeSupport.firePropertyChange(Property.LEFT_SIDE_FINISHED.name(), oldLeftSideFinished, leftSideFinished);
+    }
+  }
+
+  public Boolean getLeftSideFinished() {
+    return this.leftSideFinished;
+  }
+
+  public void setRightSideFinished(Boolean rightSideFinished) {
+    if (rightSideFinished != this.rightSideFinished) {
+      Boolean oldRightSideFinished = this.rightSideFinished;
+      this.rightSideFinished = rightSideFinished;
+      this.propertyChangeSupport.firePropertyChange(Property.RIGHT_SIDE_FINISHED.name(), oldRightSideFinished, rightSideFinished);
+    }
+  }
+
+  public Boolean getRightSideFinished() {
+    return this.rightSideFinished;
+  }
+
   /**
    * Returns the length of wall after applying the edited arc extent.
    * @return the arc length or null if data is missing to compute it
@@ -1374,7 +1415,7 @@ public class WallController implements Controller {
           rightSideBaseboardVisible, rightSideBaseboardThickness, rightSideBaseboardHeight,
           rightSideBaseboardPaint, rightSideBaseboardColor, rightSideBaseboardTexture,
           pattern, modifiedTopColor, topColor,
-          height, heightAtEnd, thickness, arcExtent);
+          height, heightAtEnd, thickness, arcExtent, leftSideFinished, rightSideFinished);
       if (this.undoSupport != null) {
         UndoableEdit undoableEdit = new WallsModificationUndoableEdit(this.home,
             this.preferences, oldSelection.toArray(new Selectable [oldSelection.size()]) , modifiedWalls,
@@ -1387,7 +1428,7 @@ public class WallController implements Controller {
             rightSideBaseboardVisible, rightSideBaseboardThickness, rightSideBaseboardHeight,
             rightSideBaseboardPaint, rightSideBaseboardColor, rightSideBaseboardTexture,
             pattern, modifiedTopColor, topColor,
-            height, heightAtEnd, thickness, arcExtent);
+            height, heightAtEnd, thickness, arcExtent, leftSideFinished, rightSideFinished);
         this.undoSupport.postEdit(undoableEdit);
       }
     }
@@ -1434,6 +1475,8 @@ public class WallController implements Controller {
     private final Float            heightAtEnd;
     private final Float            thickness;
     private final Float            arcExtent;
+    private final Boolean          leftSideFinished;
+    private final Boolean          rightSideFinished;
 
     private WallsModificationUndoableEdit(Home home,
                                           UserPreferences preferences,
@@ -1454,7 +1497,9 @@ public class WallController implements Controller {
                                           Float height,
                                           Float heightAtEnd,
                                           Float thickness,
-                                          Float arcExtent) {
+                                          Float arcExtent,
+                                          Boolean leftSideFinished,
+                                          Boolean rightSideFinished) {
       super(preferences, WallController.class, "undoModifyWallsName");
       this.home = home;
       this.oldSelection = oldSelection;
@@ -1492,6 +1537,8 @@ public class WallController implements Controller {
       this.heightAtEnd = heightAtEnd;
       this.thickness = thickness;
       this.arcExtent = arcExtent;
+      this.leftSideFinished = leftSideFinished;
+      this.rightSideFinished = rightSideFinished;
     }
 
     @Override
@@ -1513,7 +1560,7 @@ public class WallController implements Controller {
           this.rightSideBaseboardVisible, this.rightSideBaseboardThickness, this.rightSideBaseboardHeight,
           this.rightSideBaseboardPaint, this.rightSideBaseboardColor, this.rightSideBaseboardTexture,
           this.pattern, this.modifiedTopColor, this.topColor,
-          this.height, this.heightAtEnd, this.thickness, this.arcExtent);
+          this.height, this.heightAtEnd, this.thickness, this.arcExtent, this.leftSideFinished, this.rightSideFinished);
       this.home.setSelectedItems(Arrays.asList(this.oldSelection));
     }
   }
@@ -1530,7 +1577,8 @@ public class WallController implements Controller {
                                     Boolean rightSideBaseboardVisible, Float rightSideBaseboardThickness, Float rightSideBaseboardHeight,
                                     BaseboardChoiceController.BaseboardPaint rightSideBaseboardPaint, Integer rightSideBaseboardColor, HomeTexture rightSideBaseboardTexture,
                                     TextureImage pattern, boolean modifiedTopColor, Integer topColor,
-                                    Float height, Float heightAtEnd, Float thickness, Float arcExtent) {
+                                    Float height, Float heightAtEnd, Float thickness, Float arcExtent,
+                                    Boolean leftSideFinished, Boolean rightSideFinished) {
     for (ModifiedWall modifiedWall : modifiedWalls) {
       Wall wall = modifiedWall.getWall();
       moveWallPoints(wall, xStart, yStart, xEnd, yEnd);
@@ -1702,6 +1750,12 @@ public class WallController implements Controller {
           wall.setArcExtent(arcExtent);
         }
       }
+      if (leftSideFinished != null) {
+        wall.setLeftSideFinished(leftSideFinished);
+      }
+      if (rightSideFinished != null) {
+        wall.setRightSideFinished(rightSideFinished);
+      }
     }
   }
 
@@ -1727,6 +1781,8 @@ public class WallController implements Controller {
       wall.setHeightAtEnd(modifiedWall.getHeightAtEnd());
       wall.setThickness(modifiedWall.getThickness());
       wall.setArcExtent(modifiedWall.getArcExtent());
+      wall.setLeftSideFinished(modifiedWall.isLeftSideFinished());
+      wall.setRightSideFinished(modifiedWall.isRightSideFinished());
     }
   }
 
@@ -1806,6 +1862,8 @@ public class WallController implements Controller {
     private final Float        heightAtEnd;
     private final float        thickness;
     private final Float        arcExtent;
+    private final boolean      leftSideFinished;
+    private final boolean      rightSideFinished;
 
     public ModifiedWall(Wall wall) {
       this.wall = wall;
@@ -1827,6 +1885,8 @@ public class WallController implements Controller {
       this.heightAtEnd = wall.getHeightAtEnd();
       this.thickness = wall.getThickness();
       this.arcExtent = wall.getArcExtent();
+      this.leftSideFinished = wall.isLeftSideFinished();
+      this.rightSideFinished = wall.isRightSideFinished();
     }
 
     public Wall getWall() {
@@ -1903,6 +1963,14 @@ public class WallController implements Controller {
 
     public Float getArcExtent() {
       return this.arcExtent;
+    }
+
+    public boolean isLeftSideFinished() {
+      return this.leftSideFinished;
+    }
+
+    public boolean isRightSideFinished() {
+      return this.rightSideFinished;
     }
   }
 }

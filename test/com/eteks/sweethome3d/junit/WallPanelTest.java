@@ -23,6 +23,7 @@ import java.awt.geom.Point2D;
 import java.util.Arrays;
 import java.util.Locale;
 
+import javax.swing.JLabel;
 import javax.swing.JSpinner;
 
 import junit.framework.TestCase;
@@ -102,6 +103,45 @@ public class WallPanelTest extends TestCase {
     // Check values stored by furniture panel components are equal to the ones set
     assertWallControllerEquals(0.1f, null, null,
         null, null, null, null, null, 10, null, null, null, wallController);
+  }
+
+  /**
+   * Test that per-side finished wall checkboxes exist and function properly
+   */
+  public void testFinishedWallCheckboxes() throws NoSuchFieldException, IllegalAccessException {
+    // 1. Create default preferences and home with wall (right side unfinished)
+    Locale.setDefault(Locale.FRANCE);
+    UserPreferences preferences = new DefaultUserPreferences();
+    ViewFactory viewFactory = new SwingViewFactory();
+    Home home = new Home();
+    Wall wall = new Wall(0.1f, 0.2f, 100.1f, 100.2f, 7.5f, home.getWallHeight());
+    wall.setLeftSideFinished(true);
+    wall.setRightSideFinished(false);
+    home.addWall(wall);
+    home.setSelectedItems(Arrays.asList(new Wall[] {wall}));
+
+    // 2. Create wall controller and get the finished wall checkboxes
+    WallController wallController = new WallController(home, preferences, viewFactory, null, null);
+    javax.swing.JCheckBox leftSideFinishedCheckBox =
+        (javax.swing.JCheckBox)TestUtilities.getField(wallController.getView(), "leftSideFinishedCheckBox");
+    javax.swing.JCheckBox rightSideFinishedCheckBox =
+        (javax.swing.JCheckBox)TestUtilities.getField(wallController.getView(), "rightSideFinishedCheckBox");
+
+    // 3. Verify components exist and are visible
+    assertNotNull("Left side finished checkbox should exist", leftSideFinishedCheckBox);
+    assertNotNull("Right side finished checkbox should exist", rightSideFinishedCheckBox);
+    assertTrue("Left side finished checkbox should be visible", leftSideFinishedCheckBox.isVisible());
+    assertTrue("Right side finished checkbox should be visible", rightSideFinishedCheckBox.isVisible());
+
+    // 4. Verify correct values are shown
+    assertTrue("Left side should be checked (finished)", leftSideFinishedCheckBox.isSelected());
+    assertFalse("Right side should be unchecked (not finished)", rightSideFinishedCheckBox.isSelected());
+    assertEquals("Controller left side finished should match", Boolean.TRUE, wallController.getLeftSideFinished());
+    assertEquals("Controller right side finished should match", Boolean.FALSE, wallController.getRightSideFinished());
+
+    // 5. Test toggling left side checkbox (starts true, doClick toggles to false)
+    leftSideFinishedCheckBox.doClick();
+    assertEquals("Controller left side finished should update after click", Boolean.FALSE, wallController.getLeftSideFinished());
   }
   
   /**

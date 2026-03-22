@@ -53,7 +53,7 @@ public abstract class UserPreferences {
   public enum Property {LANGUAGE, SUPPORTED_LANGUAGES, UNIT, CURRENCY, VALUE_ADDED_TAX_ENABLED, DEFAULT_VALUE_ADDED_TAX_PERCENTAGE,
                         MAGNETISM_ENABLED, RULERS_VISIBLE, GRID_VISIBLE, DEFAULT_FONT_NAME,
                         FURNITURE_VIEWED_FROM_TOP, FURNITURE_MODEL_ICON_SIZE, ROOM_FLOOR_COLORED_OR_TEXTURED, WALL_PATTERN, NEW_WALL_PATTERN,
-                        NEW_WALL_THICKNESS, NEW_WALL_HEIGHT, NEW_WALL_SIDEBOARD_THICKNESS, NEW_WALL_SIDEBOARD_HEIGHT, NEW_ROOM_FLOOR_COLOR, NEW_FLOOR_THICKNESS,
+                        NEW_WALL_THICKNESS, NEW_WALL_HEIGHT, NEW_WALL_SIDEBOARD_THICKNESS, NEW_WALL_SIDEBOARD_HEIGHT, NEW_ROOM_FLOOR_COLOR, NEW_FLOOR_THICKNESS, NEW_WALL_FINISHED,
                         RECENT_HOMES, IGNORED_ACTION_TIP, FURNITURE_CATALOG_VIEWED_IN_TREE, NAVIGATION_PANEL_VISIBLE,
                         AERIAL_VIEW_CENTERED_ON_SELECTION_ENABLED, OBSERVER_CAMERA_SELECTED_AT_CHANGE, EDITING_IN_3D_VIEW_ENABLED, CHECK_UPDATES_ENABLED,
                         UPDATES_MINIMUM_DATE, AUTO_SAVE_DELAY_FOR_RECOVERY, AUTO_COMPLETION_STRINGS, RECENT_COLORS, RECENT_TEXTURES, HOME_EXAMPLES, PHOTO_RENDERER}
@@ -118,6 +118,7 @@ public abstract class UserPreferences {
   private TextureImage     newWallPattern;
   private float            newWallThickness;
   private float            newWallHeight;
+  private boolean          newWallFinished = true;
   private float            newWallBaseboardThickness;
   private float            newWallBaseboardHeight;
   private Integer          newRoomFloorColor;
@@ -948,6 +949,24 @@ public abstract class UserPreferences {
       this.newWallHeight = newWallHeight;
       this.propertyChangeSupport.firePropertyChange(Property.NEW_WALL_HEIGHT.name(),
           oldWallHeight, newWallHeight);
+    }
+  }
+
+  /**
+   * Returns whether new walls are finished (drywalled) by default.
+   */
+  public boolean isNewWallFinished() {
+    return this.newWallFinished;
+  }
+
+  /**
+   * Sets whether new walls are finished by default, and notifies listeners of this change.
+   */
+  public void setNewWallFinished(boolean newWallFinished) {
+    if (newWallFinished != this.newWallFinished) {
+      this.newWallFinished = newWallFinished;
+      this.propertyChangeSupport.firePropertyChange(Property.NEW_WALL_FINISHED.name(),
+          !newWallFinished, newWallFinished);
     }
   }
 

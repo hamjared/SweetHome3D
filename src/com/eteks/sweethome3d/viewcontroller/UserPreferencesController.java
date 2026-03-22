@@ -25,6 +25,7 @@ import java.beans.PropertyChangeSupport;
 import com.eteks.sweethome3d.model.LengthUnit;
 import com.eteks.sweethome3d.model.TextureImage;
 import com.eteks.sweethome3d.model.UserPreferences;
+import com.eteks.sweethome3d.model.Wall;
 
 /**
  * A MVC controller for user preferences view.
@@ -37,7 +38,7 @@ public class UserPreferencesController implements Controller {
   public enum Property {LANGUAGE, UNIT, CURRENCY, VALUE_ADDED_TAX_ENABLED,
       MAGNETISM_ENABLED, RULERS_VISIBLE, GRID_VISIBLE, DEFAULT_FONT_NAME,
       FURNITURE_VIEWED_FROM_TOP, FURNITURE_MODEL_ICON_SIZE, ROOM_FLOOR_COLORED_OR_TEXTURED, WALL_PATTERN, NEW_WALL_PATTERN,
-      NEW_WALL_THICKNESS, NEW_WALL_HEIGHT, NEW_FLOOR_THICKNESS, FURNITURE_CATALOG_VIEWED_IN_TREE,
+      NEW_WALL_THICKNESS, NEW_WALL_HEIGHT, NEW_WALL_FINISHED, NEW_FLOOR_THICKNESS, FURNITURE_CATALOG_VIEWED_IN_TREE,
       NAVIGATION_PANEL_VISIBLE, EDITING_IN_3D_VIEW_ENABLED, AERIAL_VIEW_CENTERED_ON_SELECTION_ENABLED, OBSERVER_CAMERA_SELECTED_AT_CHANGE,
       CHECK_UPDATES_ENABLED, AUTO_SAVE_DELAY_FOR_RECOVERY, AUTO_SAVE_FOR_RECOVERY_ENABLED}
 
@@ -67,6 +68,7 @@ public class UserPreferencesController implements Controller {
   private TextureImage                  newWallPattern;
   private float                         newWallThickness;
   private float                         newWallHeight;
+  private boolean                       newWallFinished;
   private float                         newFloorThickness;
   private boolean                       checkUpdatesEnabled;
   private int                           autoSaveDelayForRecovery;
@@ -154,6 +156,7 @@ public class UserPreferencesController implements Controller {
     float maximumLength = getUnit().getMaximumLength();
     setNewWallThickness(Math.min(Math.max(minimumLength, this.preferences.getNewWallThickness()), maximumLength / 10));
     setNewWallHeight(Math.min(Math.max(minimumLength, this.preferences.getNewWallHeight()), maximumLength));
+    setNewWallFinished(this.preferences.isNewWallFinished());
     setNewFloorThickness(Math.min(Math.max(minimumLength, this.preferences.getNewFloorThickness()), maximumLength / 10));
     setCheckUpdatesEnabled(this.preferences.isCheckUpdatesEnabled());
     setAutoSaveDelayForRecovery(this.preferences.getAutoSaveDelayForRecovery());
@@ -557,6 +560,17 @@ public class UserPreferencesController implements Controller {
     return this.newWallHeight;
   }
 
+  public void setNewWallFinished(boolean newWallFinished) {
+    if (newWallFinished != this.newWallFinished) {
+      this.newWallFinished = newWallFinished;
+      this.propertyChangeSupport.firePropertyChange(Property.NEW_WALL_FINISHED.name(), !newWallFinished, newWallFinished);
+    }
+  }
+
+  public boolean isNewWallFinished() {
+    return this.newWallFinished;
+  }
+
   /**
    * Sets the edited new floor thickness.
    */
@@ -689,6 +703,7 @@ public class UserPreferencesController implements Controller {
     this.preferences.setNewWallPattern(getNewWallPattern());
     this.preferences.setNewWallThickness(getNewWallThickness());
     this.preferences.setNewWallHeight(getNewWallHeight());
+    this.preferences.setNewWallFinished(isNewWallFinished());
     this.preferences.setNewFloorThickness(getNewFloorThickness());
     this.preferences.setCheckUpdatesEnabled(isCheckUpdatesEnabled());
     this.preferences.setAutoSaveDelayForRecovery(isAutoSaveForRecoveryEnabled()

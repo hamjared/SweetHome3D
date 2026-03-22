@@ -1512,6 +1512,23 @@ public class HomeXMLHandler extends DefaultHandler {
         // Ignore pattern
       }
     }
+    String leftSideFinishedAttr = attributes.get("leftSideFinished");
+    String rightSideFinishedAttr = attributes.get("rightSideFinished");
+    if (leftSideFinishedAttr != null || rightSideFinishedAttr != null) {
+      wall.setLeftSideFinished(!"false".equals(leftSideFinishedAttr));
+      wall.setRightSideFinished(!"false".equals(rightSideFinishedAttr));
+    } else {
+      // Backward compat: migrate legacy drywallType attribute
+      String drywallType = attributes.get("drywallType");
+      if ("NO_DRYWALL".equals(drywallType)) {
+        wall.setLeftSideFinished(false);
+        wall.setRightSideFinished(false);
+      } else if ("SINGLE_SIDE".equals(drywallType)) {
+        wall.setLeftSideFinished(true);
+        wall.setRightSideFinished(false);
+      }
+      // BOTH_SIDES or missing → defaults (both true) already set
+    }
   }
 
   /**

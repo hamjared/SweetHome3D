@@ -67,6 +67,7 @@ import javax.swing.event.ChangeListener;
 import com.eteks.sweethome3d.model.HomeTexture;
 import com.eteks.sweethome3d.model.TextureImage;
 import com.eteks.sweethome3d.model.UserPreferences;
+import com.eteks.sweethome3d.model.Wall;
 import com.eteks.sweethome3d.tools.OperatingSystem;
 import com.eteks.sweethome3d.tools.ResourceURLContent;
 import com.eteks.sweethome3d.viewcontroller.BaseboardChoiceController;
@@ -122,6 +123,8 @@ public class WallPanel extends JPanel implements DialogView {
   private JSpinner             thicknessSpinner;
   private JLabel               arcExtentLabel;
   private JSpinner             arcExtentSpinner;
+  private javax.swing.JCheckBox leftSideFinishedCheckBox;
+  private javax.swing.JCheckBox rightSideFinishedCheckBox;
   private JEditorPane          wallOrientationLabel;
   private String               dialogTitle;
 
@@ -134,6 +137,7 @@ public class WallPanel extends JPanel implements DialogView {
   public WallPanel(UserPreferences preferences,
                    WallController controller) {
     super(new GridBagLayout());
+    System.out.println("[WallPanel] constructor called");
     this.controller = controller;
     createComponents(preferences, controller);
     setMnemonics(preferences);
@@ -767,6 +771,44 @@ public class WallPanel extends JPanel implements DialogView {
         }
       });
 
+    // Create per-side finished checkboxes bound to LEFT_SIDE_FINISHED / RIGHT_SIDE_FINISHED controller properties
+    System.out.println("[WallPanel] creating leftSideFinishedCheckBox");
+    this.leftSideFinishedCheckBox = new javax.swing.JCheckBox(SwingTools.getLocalizedLabelText(preferences,
+        WallPanel.class, "leftSideFinishedCheckBox.text"));
+    Boolean leftFinished = controller.getLeftSideFinished();
+    this.leftSideFinishedCheckBox.setSelected(leftFinished == null || leftFinished);
+    controller.addPropertyChangeListener(WallController.Property.LEFT_SIDE_FINISHED, new PropertyChangeListener() {
+        public void propertyChange(PropertyChangeEvent ev) {
+          Boolean val = (Boolean) ev.getNewValue();
+          leftSideFinishedCheckBox.setSelected(val == null || val);
+          updateLeftSideFinishedState();
+        }
+      });
+    this.leftSideFinishedCheckBox.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent ev) {
+          controller.setLeftSideFinished(leftSideFinishedCheckBox.isSelected());
+          updateLeftSideFinishedState();
+        }
+      });
+
+    this.rightSideFinishedCheckBox = new javax.swing.JCheckBox(SwingTools.getLocalizedLabelText(preferences,
+        WallPanel.class, "rightSideFinishedCheckBox.text"));
+    Boolean rightFinished = controller.getRightSideFinished();
+    this.rightSideFinishedCheckBox.setSelected(rightFinished == null || rightFinished);
+    controller.addPropertyChangeListener(WallController.Property.RIGHT_SIDE_FINISHED, new PropertyChangeListener() {
+        public void propertyChange(PropertyChangeEvent ev) {
+          Boolean val = (Boolean) ev.getNewValue();
+          rightSideFinishedCheckBox.setSelected(val == null || val);
+          updateRightSideFinishedState();
+        }
+      });
+    this.rightSideFinishedCheckBox.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent ev) {
+          controller.setRightSideFinished(rightSideFinishedCheckBox.isSelected());
+          updateRightSideFinishedState();
+        }
+      });
+
     // wallOrientationLabel shows an HTML explanation of wall orientation with an image URL in resource
     this.wallOrientationLabel = new JEditorPane("text/html", preferences.getLocalizedString(
             WallPanel.class, "wallOrientationLabel.text",
@@ -830,6 +872,28 @@ public class WallPanel extends JPanel implements DialogView {
     } else { // null
       this.rightSideShinyRadioButton.setSelected(true);
     }
+  }
+
+  private void updateLeftSideFinishedState() {
+    boolean finished = this.leftSideFinishedCheckBox.isSelected();
+    this.leftSideColorRadioButton.setEnabled(finished);
+    this.leftSideColorButton.setEnabled(finished);
+    this.leftSideTextureRadioButton.setEnabled(finished);
+    this.leftSideTextureComponent.setEnabled(finished);
+    this.leftSideMattRadioButton.setEnabled(finished);
+    this.leftSideShinyRadioButton.setEnabled(finished);
+    this.leftSideBaseboardButton.setEnabled(finished);
+  }
+
+  private void updateRightSideFinishedState() {
+    boolean finished = this.rightSideFinishedCheckBox.isSelected();
+    this.rightSideColorRadioButton.setEnabled(finished);
+    this.rightSideColorButton.setEnabled(finished);
+    this.rightSideTextureRadioButton.setEnabled(finished);
+    this.rightSideTextureComponent.setEnabled(finished);
+    this.rightSideMattRadioButton.setEnabled(finished);
+    this.rightSideShinyRadioButton.setEnabled(finished);
+    this.rightSideBaseboardButton.setEnabled(finished);
   }
 
   /**
@@ -994,41 +1058,68 @@ public class WallPanel extends JPanel implements DialogView {
         0, 1, 2, 1, 0, 0, GridBagConstraints.LINE_START,
         GridBagConstraints.HORIZONTAL, rowInsets, 0, 0));
     // Third row
-    JPanel leftSidePanel = createTitledPanel(
-        preferences.getLocalizedString(WallPanel.class, "leftSidePanel.title"),
-        new JComponent [] {this.leftSideColorRadioButton, this.leftSideColorButton,
-                           this.leftSideTextureRadioButton, this.leftSideTextureComponent}, false);
+    int smallGap = Math.round(2 * SwingTools.getResolutionScale());
+    JPanel leftSidePanel = SwingTools.createTitledPanel(
+        preferences.getLocalizedString(WallPanel.class, "leftSidePanel.title"));
+    leftSidePanel.add(this.leftSideFinishedCheckBox, new GridBagConstraints(
+        0, 0, 2, 1, 1, 0, GridBagConstraints.LINE_START,
+        GridBagConstraints.NONE, new Insets(0, 0, standardGap, 0), 0, 0));
+    leftSidePanel.add(this.leftSideColorRadioButton, new GridBagConstraints(
+        0, 1, 1, 1, 1, 0, GridBagConstraints.LINE_START,
+        GridBagConstraints.NONE, new Insets(0, 0, smallGap, standardGap), 0, 0));
+    leftSidePanel.add(this.leftSideColorButton, new GridBagConstraints(
+        1, 1, 1, 1, 1, 0, GridBagConstraints.LINE_START,
+        GridBagConstraints.HORIZONTAL, new Insets(0, 0, smallGap, 0), 0, 0));
+    leftSidePanel.add(this.leftSideTextureRadioButton, new GridBagConstraints(
+        0, 2, 1, 1, 1, 0, GridBagConstraints.LINE_START,
+        GridBagConstraints.NONE, new Insets(0, 0, 0, standardGap), 0, 0));
+    leftSidePanel.add(this.leftSideTextureComponent, new GridBagConstraints(
+        1, 2, 1, 1, 1, 0, GridBagConstraints.LINE_START,
+        GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
     leftSidePanel.add(new JSeparator(), new GridBagConstraints(
-        0, 2, 2, 1, 1, 0, GridBagConstraints.CENTER,
+        0, 3, 2, 1, 1, 0, GridBagConstraints.CENTER,
         GridBagConstraints.HORIZONTAL, new Insets(3, 0, 3, 0), 0, 0));
     leftSidePanel.add(this.leftSideMattRadioButton, new GridBagConstraints(
-        0, 3, 1, 1, 1, 0, GridBagConstraints.LINE_START,
+        0, 4, 1, 1, 1, 0, GridBagConstraints.LINE_START,
         GridBagConstraints.NONE, new Insets(0, 0, 0, standardGap), 0, 0));
     leftSidePanel.add(this.leftSideShinyRadioButton, new GridBagConstraints(
-        1, 3, 1, 1, 1, 0, GridBagConstraints.LINE_START,
+        1, 4, 1, 1, 1, 0, GridBagConstraints.LINE_START,
         GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
     leftSidePanel.add(this.leftSideBaseboardButton, new GridBagConstraints(
-        0, 4, 2, 1, 1, 0, GridBagConstraints.CENTER,
+        0, 5, 2, 1, 1, 0, GridBagConstraints.CENTER,
         GridBagConstraints.NONE, new Insets(standardGap, 0, 0, 0), 0, 0));
     add(leftSidePanel, new GridBagConstraints(
         0, 2, 1, 1, 1, 0, GridBagConstraints.LINE_START,
         GridBagConstraints.HORIZONTAL, rowInsets, 0, 0));
 
-    JPanel rightSidePanel = createTitledPanel(
-        preferences.getLocalizedString(WallPanel.class, "rightSidePanel.title"),
-        new JComponent [] {this.rightSideColorRadioButton, this.rightSideColorButton,
-                           this.rightSideTextureRadioButton, this.rightSideTextureComponent}, false);
+    JPanel rightSidePanel = SwingTools.createTitledPanel(
+        preferences.getLocalizedString(WallPanel.class, "rightSidePanel.title"));
+    rightSidePanel.add(this.rightSideFinishedCheckBox, new GridBagConstraints(
+        0, 0, 2, 1, 1, 0, GridBagConstraints.LINE_START,
+        GridBagConstraints.NONE, new Insets(0, 0, standardGap, 0), 0, 0));
+    rightSidePanel.add(this.rightSideColorRadioButton, new GridBagConstraints(
+        0, 1, 1, 1, 1, 0, GridBagConstraints.LINE_START,
+        GridBagConstraints.NONE, new Insets(0, 0, smallGap, standardGap), 0, 0));
+    rightSidePanel.add(this.rightSideColorButton, new GridBagConstraints(
+        1, 1, 1, 1, 1, 0, GridBagConstraints.LINE_START,
+        GridBagConstraints.HORIZONTAL, new Insets(0, 0, smallGap, 0), 0, 0));
+    rightSidePanel.add(this.rightSideTextureRadioButton, new GridBagConstraints(
+        0, 2, 1, 1, 1, 0, GridBagConstraints.LINE_START,
+        GridBagConstraints.NONE, new Insets(0, 0, 0, standardGap), 0, 0));
+    rightSidePanel.add(this.rightSideTextureComponent, new GridBagConstraints(
+        1, 2, 1, 1, 1, 0, GridBagConstraints.LINE_START,
+        GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
     rightSidePanel.add(new JSeparator(), new GridBagConstraints(
-        0, 2, 2, 1, 1, 0, GridBagConstraints.CENTER,
+        0, 3, 2, 1, 1, 0, GridBagConstraints.CENTER,
         GridBagConstraints.HORIZONTAL, new Insets(3, 0, 3, 0), 0, 0));
     rightSidePanel.add(this.rightSideMattRadioButton, new GridBagConstraints(
-        0, 3, 1, 1, 1, 0, GridBagConstraints.LINE_START,
+        0, 4, 1, 1, 1, 0, GridBagConstraints.LINE_START,
         GridBagConstraints.NONE, new Insets(0, 0, 0, standardGap), 0, 0));
     rightSidePanel.add(this.rightSideShinyRadioButton, new GridBagConstraints(
-        1, 3, 1, 1, 1, 0, GridBagConstraints.LINE_START,
+        1, 4, 1, 1, 1, 0, GridBagConstraints.LINE_START,
         GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
     rightSidePanel.add(this.rightSideBaseboardButton, new GridBagConstraints(
-        0, 4, 2, 1, 1, 0, GridBagConstraints.CENTER,
+        0, 5, 2, 1, 1, 0, GridBagConstraints.CENTER,
         GridBagConstraints.NONE, new Insets(standardGap, 0, 0, 0), 0, 0));
     add(rightSidePanel, new GridBagConstraints(
         1, 2, 1, 1, 1, 0, GridBagConstraints.LINE_START,
@@ -1104,26 +1195,26 @@ public class WallPanel extends JPanel implements DialogView {
         GridBagConstraints.HORIZONTAL, rowInsets, 0, 0));
 
     // Sixth row
-    JPanel ticknessAndArcExtentPanel = new JPanel(new GridBagLayout());
-    ticknessAndArcExtentPanel.add(this.thicknessLabel, new GridBagConstraints(
+    JPanel thicknessArcExtentPanel = new JPanel(new GridBagLayout());
+    thicknessArcExtentPanel.add(this.thicknessLabel, new GridBagConstraints(
         0, 0, 1, 1, 0, 0, labelAlignment,
         GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, standardGap), 0, 0));
-    ticknessAndArcExtentPanel.add(this.thicknessSpinner, new GridBagConstraints(
+    thicknessArcExtentPanel.add(this.thicknessSpinner, new GridBagConstraints(
         1, 0, 1, 1, 1, 0, GridBagConstraints.LINE_START,
         GridBagConstraints.NONE, new Insets(0, 0, 0, 10), 0, 0));
-    ticknessAndArcExtentPanel.add(this.arcExtentLabel, new GridBagConstraints(
+    thicknessArcExtentPanel.add(this.arcExtentLabel, new GridBagConstraints(
         2, 0, 1, 1, 0, 0, labelAlignment,
         GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, standardGap), 0, 0));
-    ticknessAndArcExtentPanel.add(this.arcExtentSpinner, new GridBagConstraints(
+    thicknessArcExtentPanel.add(this.arcExtentSpinner, new GridBagConstraints(
         3, 0, 1, 1, 1, 0, GridBagConstraints.LINE_START,
         GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
-    add(ticknessAndArcExtentPanel, new GridBagConstraints(
+    add(thicknessArcExtentPanel, new GridBagConstraints(
         0, 5, 2, 1, 0, 0, GridBagConstraints.CENTER,
         GridBagConstraints.NONE, new Insets(standardGap, 8, 10, 8), 0, 0));
 
     // Last row
     add(this.wallOrientationLabel, new GridBagConstraints(
-        0, 6, 2, 1, 0, 0, GridBagConstraints.CENTER,
+        0, 8, 2, 1, 0, 0, GridBagConstraints.CENTER,
         GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
 
     // Make startPointPanel and endPointPanel visible depending on editable points property
@@ -1140,6 +1231,10 @@ public class WallPanel extends JPanel implements DialogView {
     endPointPanel.setVisible(controller.isEditablePoints());
     this.arcExtentLabel.setVisible(controller.isEditablePoints());
     this.arcExtentSpinner.setVisible(controller.isEditablePoints());
+
+    // Initialize finished state enablement
+    updateLeftSideFinishedState();
+    updateRightSideFinishedState();
   }
 
   private JPanel createTitledPanel(String title, JComponent [] components, boolean horizontal) {

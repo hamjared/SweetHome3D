@@ -124,6 +124,7 @@ public class UserPreferencesPanel extends JPanel implements DialogView {
   private JSpinner         newWallThicknessSpinner;
   private JLabel           newWallHeightLabel;
   private JSpinner         newWallHeightSpinner;
+  private JCheckBox        newWallFinishedCheckBox;
   private JLabel           newFloorThicknessLabel;
   private JSpinner         newFloorThicknessSpinner;
   private JCheckBox        checkUpdatesCheckBox;
@@ -716,6 +717,23 @@ public class UserPreferencesPanel extends JPanel implements DialogView {
           });
     }
 
+    if (controller.isPropertyEditable(UserPreferencesController.Property.NEW_WALL_FINISHED)) {
+      this.newWallFinishedCheckBox = new JCheckBox(SwingTools.getLocalizedLabelText(preferences,
+          UserPreferencesPanel.class, "newWallFinishedCheckBox.text"));
+      this.newWallFinishedCheckBox.setSelected(controller.isNewWallFinished());
+      this.newWallFinishedCheckBox.addActionListener(new java.awt.event.ActionListener() {
+          public void actionPerformed(java.awt.event.ActionEvent ev) {
+            controller.setNewWallFinished(newWallFinishedCheckBox.isSelected());
+          }
+        });
+      controller.addPropertyChangeListener(UserPreferencesController.Property.NEW_WALL_FINISHED,
+          new PropertyChangeListener() {
+            public void propertyChange(PropertyChangeEvent ev) {
+              newWallFinishedCheckBox.setSelected(controller.isNewWallFinished());
+            }
+          });
+    }
+
     if (controller.isPropertyEditable(UserPreferencesController.Property.NEW_FLOOR_THICKNESS)) {
       // Create wall thickness label and spinner bound to controller NEW_FLOOR_THICKNESS property
       this.newFloorThicknessLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences,
@@ -1006,6 +1024,10 @@ public class UserPreferencesPanel extends JPanel implements DialogView {
             UserPreferencesPanel.class, "newWallHeightLabel.mnemonic")).getKeyCode());
         this.newWallHeightLabel.setLabelFor(this.newWallHeightSpinner);
       }
+      if (this.newWallFinishedCheckBox != null) {
+        this.newWallFinishedCheckBox.setMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
+            UserPreferencesPanel.class, "newWallFinishedCheckBox.mnemonic")).getKeyCode());
+      }
       if (this.newFloorThicknessLabel != null) {
         this.newFloorThicknessLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
             UserPreferencesPanel.class, "newFloorThicknessLabel.mnemonic")).getKeyCode());
@@ -1261,18 +1283,24 @@ public class UserPreferencesPanel extends JPanel implements DialogView {
           1, 17, 1, 1, 0, 0, GridBagConstraints.LINE_START,
           GridBagConstraints.HORIZONTAL, rightComponentInsets, 0, 0));
     }
-    if (this.newFloorThicknessLabel != null) {
+    if (this.newWallFinishedCheckBox != null) {
       // Nineteenth row
+      add(this.newWallFinishedCheckBox, new GridBagConstraints(
+          0, 18, 2, 1, 0, 0, GridBagConstraints.LINE_START,
+          GridBagConstraints.NONE, checkBoxInsets, 0, 0));
+    }
+    if (this.newFloorThicknessLabel != null) {
+      // Twentieth row
       add(this.newFloorThicknessLabel, new GridBagConstraints(
-          0, 18, 1, 1, 0, 0, labelAlignment,
+          0, 19, 1, 1, 0, 0, labelAlignment,
           GridBagConstraints.NONE, labelInsets, 0, 0));
       add(this.newFloorThicknessSpinner, new GridBagConstraints(
-          1, 18, 1, 1, 0, 0, GridBagConstraints.LINE_START,
+          1, 19, 1, 1, 0, 0, GridBagConstraints.LINE_START,
           GridBagConstraints.HORIZONTAL, rightComponentInsets, 0, 0));
     }
     if (this.checkUpdatesCheckBox != null
         || this.autoSaveDelayForRecoveryCheckBox != null) {
-      // Twentieth row
+      // Twenty-first row
       JPanel updatesAndAutoSaveDelayForRecoveryPanel = new JPanel(new GridBagLayout());
       if (this.checkUpdatesCheckBox != null) {
         updatesAndAutoSaveDelayForRecoveryPanel.add(this.checkUpdatesCheckBox,
@@ -1299,7 +1327,7 @@ public class UserPreferencesPanel extends JPanel implements DialogView {
                 GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
       }
       add(updatesAndAutoSaveDelayForRecoveryPanel, new GridBagConstraints(
-          0, 19, 3, 1, 0, 0, GridBagConstraints.LINE_START,
+          0, 20, 3, 1, 0, 0, GridBagConstraints.LINE_START,
           GridBagConstraints.HORIZONTAL, rightComponentInsets, 0, 0));
     }
 

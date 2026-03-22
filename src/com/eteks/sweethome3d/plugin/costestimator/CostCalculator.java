@@ -125,13 +125,21 @@ public class CostCalculator {
   }
 
   private static float calculateWallSurfaceSqFt(Home home) {
-    // Approximate: sum of wall lengths * wall height * 2 sides (minus openings)
+    // Sum wall surface area based on per-wall drywall configuration
     // For simplicity, use default wall height and apply a rough opening reduction factor
     float wallHeight = cmToFeet(home.getWallHeight());
-    float perimeter = cmToFeet(calculateWallPerimeter(home));
-    float surfaceArea = perimeter * wallHeight * 2; // 2 sides
+    float totalSurfaceArea = 0f;
+
+    for (Wall wall : home.getWalls()) {
+      float wallLengthFt = cmToFeet(wall.getLength());
+      float wallArea = wallLengthFt * wallHeight;
+
+      int finishedSides = (wall.isLeftSideFinished() ? 1 : 0) + (wall.isRightSideFinished() ? 1 : 0);
+      totalSurfaceArea += wallArea * finishedSides;
+    }
+
     // Reduce by ~10% for door/window openings
-    return surfaceArea * 0.9f;
+    return totalSurfaceArea * 0.9f;
   }
 
   private static float calculateWallPerimeter(Home home) {
