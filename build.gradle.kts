@@ -268,7 +268,7 @@ tasks.build {
 // Windows installer with bundled JRE using jpackage
 tasks.register<Exec>("createWindowsInstaller") {
     group = "build"
-    description = "Create Windows .exe installer with bundled JRE (requires Windows + JDK 16+)"
+    description = "Create Windows .exe installer with bundled JRE (Windows + JDK 16+ only)"
 
     dependsOn("jarExecutableWithPlugin")
 
@@ -278,13 +278,13 @@ tasks.register<Exec>("createWindowsInstaller") {
     }
 
     val appVersion = version.toString()
-    val jarPath = file("install/SweetHome3D-${appVersion}-with-plugin.jar").absolutePath
     val outputDir = file("build/installer").absolutePath
 
     file(outputDir).mkdirs()
 
+    val javaHome = System.getenv("JAVA_HOME") ?: System.getProperty("java.home")
     commandLine(
-        "jpackage",
+        "$javaHome/bin/jpackage.exe",
         "--input", file("install").absolutePath,
         "--name", "SweetHome3D",
         "--main-jar", "SweetHome3D-${appVersion}-with-plugin.jar",
@@ -294,14 +294,17 @@ tasks.register<Exec>("createWindowsInstaller") {
         "--app-version", appVersion,
         "--vendor", "Space Mushrooms",
         "--description", "Sweet Home 3D - Interior 2D design application with Cost Estimator",
-        "--icon", "src/resources/icon.png"
+        "--win-menu",
+        "--win-menu-group", "SweetHome3D",
+        "--win-shortcut"
     )
 
     doLast {
         println("✓ Windows installer created in: $outputDir")
         val exeFile = file("$outputDir/SweetHome3D-${appVersion}.exe")
         if (exeFile.exists()) {
-            println("✓ Installer: ${exeFile.name} (${exeFile.length() / (1024 * 1024)} MB)")
+            val sizeMB = exeFile.length() / (1024 * 1024)
+            println("✓ Installer: ${exeFile.name} ($sizeMB MB)")
         }
     }
 }
