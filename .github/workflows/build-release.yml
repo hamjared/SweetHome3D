@@ -14,7 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -34,16 +33,15 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "VERSION=$VERSION"
 
-      - name: Create Release
-        uses: actions/create-release@v1
-        id: create_release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Release and Upload JARs
+        uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ steps.version.outputs.version }}
-          release_name: Release v${{ steps.version.outputs.version }}
           draft: false
-          prerelease: false
+          files: |
+            ./install/SweetHome3D-${{ steps.version.outputs.version }}-with-plugin.jar
+            ./install/SweetHome3D-${{ steps.version.outputs.version }}.jar
+            ./install/plugins/CostEstimatorPlugin.jar
           body: |
             ## Automated Build Release
 
@@ -64,36 +62,8 @@ jobs:
             - ✅ Java 21 LTS
             - ✅ Gradle build system
             - ✅ Cost Estimator plugin (framing, drywall, electrical, plumbing cost estimation)
-
-      - name: Upload bundled JAR
-        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./install/SweetHome3D-${{ steps.version.outputs.version }}-with-plugin.jar
-          asset_name: SweetHome3D-${{ steps.version.outputs.version }}-with-plugin.jar
-          asset_content_type: application/java-archive
-
-      - name: Upload main JAR
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./install/SweetHome3D-${{ steps.version.outputs.version }}.jar
-          asset_name: SweetHome3D-${{ steps.version.outputs.version }}.jar
-          asset_content_type: application/java-archive
-
-      - name: Upload plugin JAR
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./install/plugins/CostEstimatorPlugin.jar
-          asset_name: CostEstimatorPlugin.jar
-          asset_content_type: application/java-archive
 
   build-windows-installer:
     name: Build Windows Installer
@@ -154,11 +124,9 @@ jobs:
           }
 
       - name: Upload Windows installer
-        uses: actions/upload-release-asset@v1
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ needs.build-jars.outputs.version }}
+          files: ./build/installer/SweetHome3D-${{ needs.build-jars.outputs.version }}.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.build-jars.outputs.upload_url }}
-          asset_path: ./build/installer/SweetHome3D-${{ needs.build-jars.outputs.version }}.exe
-          asset_name: SweetHome3D-${{ needs.build-jars.outputs.version }}-installer.exe
-          asset_content_type: application/octet-stream
