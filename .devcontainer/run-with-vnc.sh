@@ -17,10 +17,10 @@ fi
 
 # Setup Cost Estimator plugin
 echo "Setting up Cost Estimator plugin..."
-mkdir -p ~/.sweethome3d/plugins
-if [ ! -f ~/.sweethome3d/plugins/CostEstimatorPlugin.jar ]; then
+mkdir -p ~/.eteks/sweethome3d/plugins
+if [ ! -f ~/.eteks/sweethome3d/plugins/CostEstimatorPlugin.jar ]; then
     if [ -f install/plugins/CostEstimatorPlugin.jar ]; then
-        cp install/plugins/CostEstimatorPlugin.jar ~/.sweethome3d/plugins/
+        cp install/plugins/CostEstimatorPlugin.jar ~/.eteks/sweethome3d/plugins/
         echo "✓ Plugin installed from build"
     else
         echo "⚠ Plugin JAR not found in install/plugins/"
