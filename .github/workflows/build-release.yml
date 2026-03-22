@@ -21,7 +21,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Build with Gradle
-        run: ./gradlew jarExecutable
+        run: ./gradlew jarExecutable jarExecutableWithPlugin
 
       - name: Extract version
         id: version
@@ -45,19 +45,35 @@ jobs:
 
             Built from commit: ${{ github.sha }}
 
-            ### Contents
-            - **SweetHome3D-${{ steps.version.outputs.version }}.jar** - Main application with integrated Cost Estimator plugin
-            - **CostEstimatorPlugin.jar** - Cost Estimator plugin (also bundled in main JAR)
+            ### Download Options
+
+            **Option 1: Everything Bundled (Recommended)**
+            - **SweetHome3D-${{ steps.version.outputs.version }}-with-plugin.jar** - Main application with Cost Estimator plugin already included
+            - Simply run: `java -jar SweetHome3D-${{ steps.version.outputs.version }}-with-plugin.jar`
+
+            **Option 2: Separate Components**
+            - **SweetHome3D-${{ steps.version.outputs.version }}.jar** - Main application only
+            - **CostEstimatorPlugin.jar** - Cost Estimator plugin (place in ~/.sweethome3d/plugins/)
 
             ### Features
             - Java 21 LTS
             - Gradle-based build system
-            - Integrated Cost Estimator plugin for construction cost estimation
+            - Cost Estimator plugin for construction cost estimation (framing, drywall, electrical, plumbing, etc.)
 
             ### Installation
-            Simply download and run: `java -jar SweetHome3D-${{ steps.version.outputs.version }}.jar`
+            Use the bundled version for simplicity: `java -jar SweetHome3D-${{ steps.version.outputs.version }}-with-plugin.jar`
 
-      - name: Upload main JAR
+      - name: Upload bundled JAR (with plugin)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./install/SweetHome3D-${{ steps.version.outputs.version }}-with-plugin.jar
+          asset_name: SweetHome3D-${{ steps.version.outputs.version }}-with-plugin.jar
+          asset_content_type: application/java-archive
+
+      - name: Upload main JAR (without plugin)
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

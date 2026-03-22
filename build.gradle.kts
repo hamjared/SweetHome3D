@@ -182,6 +182,84 @@ tasks.named("jarExecutable") {
     dependsOn("costEstimatorPlugin")
 }
 
+// Bundled JAR with plugin included
+tasks.register<Jar>("jarExecutableWithPlugin") {
+    group = "build"
+    description = "Build self-contained JAR with Cost Estimator plugin bundled"
+
+    archiveFileName.set("SweetHome3D-${version}-with-plugin.jar")
+    destinationDirectory.set(file("$buildDir/libs"))
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    manifest {
+        attributes(
+            "Main-Class" to "com.eteks.sweethome3d.SweetHome3DBootstrap",
+            "Add-opens" to "java.desktop/java.awt java.desktop/sun.awt java.desktop/com.apple.eio java.desktop/com.apple.eawt",
+            "Implementation-Title" to "Sweet Home 3D",
+            "Implementation-Version" to version,
+            "Implementation-Vendor" to "Space Mushrooms"
+        )
+    }
+
+    // Include all compiled classes (including plugin)
+    from(sourceSets.main.get().output)
+
+    // Include all runtime dependencies
+    val runtimeClasspath = configurations.runtimeClasspath.get()
+    from(runtimeClasspath.map { if (it.isDirectory) it else zipTree(it) }) {
+        exclude("META-INF/*.SF")
+        exclude("META-INF/*.DSA")
+        exclude("META-INF/*.RSA")
+        exclude("META-INF/MANIFEST.MF")
+    }
+
+    // Include native libraries
+    from("lib/java3d-1.6/linux/amd64") {
+        into("lib/java3d-1.6/linux/amd64")
+        include("*.so")
+    }
+    from("lib/java3d-1.6/linux/i586") {
+        into("lib/java3d-1.6/linux/i586")
+        include("*.so")
+    }
+    from("lib/java3d-1.6/windows/x64") {
+        into("lib/java3d-1.6/windows/x64")
+        include("*.dll")
+    }
+    from("lib/java3d-1.6/windows/i386") {
+        into("lib/java3d-1.6/windows/i386")
+        include("*.dll")
+    }
+    from("lib/java3d-1.6/macosx") {
+        into("lib/java3d-1.6/macosx")
+        include("*.jnilib", "*.dylib")
+    }
+
+    // Include YafaRay native libraries
+    from("lib/yafaray/linux/x64") {
+        into("lib/yafaray/linux/x64")
+        include("*.so")
+    }
+    from("lib/yafaray/windows/x64") {
+        into("lib/yafaray/windows/x64")
+        include("*.dll")
+    }
+    from("lib/yafaray/macosx") {
+        into("lib/yafaray/macosx")
+        include("*.jnilib", "*.dylib")
+    }
+
+    doLast {
+        val installDir = file("install")
+        installDir.mkdirs()
+        copy {
+            from(archiveFile)
+            into(installDir)
+        }
+        println("✓ Built: ${installDir}/${archiveFileName.get()}")
+    }
+}
+
 // Copy jarExecutable output to install/ directory
 tasks.build {
     dependsOn("jarExecutable")
