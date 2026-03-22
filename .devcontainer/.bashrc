@@ -98,11 +98,33 @@ alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'
 alias egrep='egrep --color=auto'
 
-# Sweet Home 3D specific aliases
+# Sweet Home 3D specific aliases and functions
 alias build='python .devcontainer/build.py build'
 alias rebuild='python .devcontainer/build.py rebuild'
 alias run='python .devcontainer/build.py run'
 alias clean='python .devcontainer/build.py clean'
+
+help() {
+    echo ""
+    echo "╔════════════════════════════════════════════╗"
+    echo "║   Sweet Home 3D Development Container      ║"
+    echo "╚════════════════════════════════════════════╝"
+    echo ""
+    echo "📦 Build commands:"
+    echo "   build     - Build the main JAR executable"
+    echo "   rebuild   - Clean and rebuild"
+    echo "   clean     - Clean build artifacts"
+    echo ""
+    echo "🖥️  GUI via VNC:"
+    echo "   start-vnc       - Start VNC server"
+    echo "   run-with-vnc    - Build & run with GUI"
+    echo "   Access: vncviewer localhost:5901"
+    echo ""
+    echo "Java version: $(java -version 2>&1 | head -n 1)"
+    echo "Python version: $(python3 --version)"
+    echo "Gradle version: $(./gradlew --version 2>&1 | head -n 1)"
+    echo ""
+}
 
 # enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
@@ -123,23 +145,5 @@ parse_git_branch() {
 # Enhanced prompt with git branch support
 PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[01;33m\]$(parse_git_branch)\[\033[00m\]\$ '
 
-# Welcome message
-echo ""
-echo "╔════════════════════════════════════════════╗"
-echo "║   Sweet Home 3D Development Container      ║"
-echo "╚════════════════════════════════════════════╝"
-echo ""
-echo "📦 Build commands:"
-echo "   build     - Build the main JAR executable"
-echo "   rebuild   - Clean and rebuild"
-echo "   clean     - Clean build artifacts"
-echo ""
-echo "🖥️  GUI via VNC:"
-echo "   start-vnc       - Start VNC server"
-echo "   run-with-vnc    - Build & run with GUI"
-echo "   Access: vncviewer localhost:5901"
-echo ""
-echo "Java version: $(java -version 2>&1 | head -n 1)"
-echo "Python version: $(python3 --version)"
-echo "Gradle version: $(./gradlew --version 2>&1 | head -n 1)"
-echo ""
+# Print help on shell start
+help
