@@ -40,7 +40,16 @@ public class Wall extends HomeObject implements Selectable, Elevatable {
                         THICKNESS, HEIGHT, HEIGHT_AT_END,
                         LEFT_SIDE_COLOR, LEFT_SIDE_TEXTURE, LEFT_SIDE_SHININESS, LEFT_SIDE_BASEBOARD,
                         RIGHT_SIDE_COLOR, RIGHT_SIDE_TEXTURE, RIGHT_SIDE_SHININESS, RIGHT_SIDE_BASEBOARD,
-                        PATTERN, TOP_COLOR, LEVEL}
+                        PATTERN, TOP_COLOR, LEVEL, DRYWALL_TYPE}
+
+  /**
+   * Drywall configuration for wall surfaces.
+   */
+  public enum DrywallType {
+    BOTH_SIDES,    // Drywall on both sides of the wall
+    SINGLE_SIDE,   // Drywall on one side only
+    NO_DRYWALL     // No drywall
+  }
 
   private static final long serialVersionUID = 1L;
 
@@ -66,6 +75,7 @@ public class Wall extends HomeObject implements Selectable, Elevatable {
   private TextureImage        pattern;
   private Integer             topColor;
   private Level               level;
+  private DrywallType         drywallType = DrywallType.BOTH_SIDES;
 
   private transient Shape      shapeCache;
   private transient float []   arcCircleCenterCache;
@@ -1233,6 +1243,27 @@ public class Wall extends HomeObject implements Selectable, Elevatable {
       if (wallAtEndIndex != -1) {
         wallsCopy.get(i).setWallAtEnd(wallsCopy.get(wallAtEndIndex));
       }
+    }
+  }
+
+  /**
+   * Returns the drywall type of this wall.
+   */
+  public DrywallType getDrywallType() {
+    // drywallType may be null when deserializing homes saved before this field was added
+    return this.drywallType != null ? this.drywallType : DrywallType.BOTH_SIDES;
+  }
+
+  /**
+   * Sets the drywall type of this wall. Once this wall is updated,
+   * listeners added to this wall will receive a change notification.
+   */
+  public void setDrywallType(DrywallType drywallType) {
+    if (drywallType != this.drywallType
+        && (drywallType == null || !drywallType.equals(this.drywallType))) {
+      DrywallType oldDrywallType = this.drywallType;
+      this.drywallType = drywallType;
+      firePropertyChange(Property.DRYWALL_TYPE.name(), oldDrywallType, drywallType);
     }
   }
 
