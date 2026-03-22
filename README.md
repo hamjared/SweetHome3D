@@ -30,13 +30,14 @@ The built JAR will be in `install/SweetHome3D-*.jar`
 
 ## Running the App with GUI
 
-You'll need a VNC viewer on your local machine:
-- **macOS**: `brew install vnc-viewer`
-- **Ubuntu/Debian**: `sudo apt-get install tigervnc-viewer`
-- **Windows**: Download [RealVNC Viewer](https://www.realvnc.com/en/connect/download/viewer/)
+**One command (recommended):**
+```bash
+run-with-vnc
+```
 
-Then in the container:
+This handles everything: building, setting up plugins, starting VNC, and launching the app!
 
+**Or manually:**
 ```bash
 # Terminal 1: Start the VNC server
 start-vnc
@@ -47,47 +48,44 @@ export DISPLAY=:1
 java -jar install/SweetHome3D-*.jar
 ```
 
-**On your local machine**, open your VNC viewer and connect to:
-```
-localhost:5901
-```
+You'll need a VNC viewer on your local machine:
+- **macOS**: `brew install vnc-viewer`
+- **Ubuntu/Debian**: `sudo apt-get install tigervnc-viewer`
+- **Windows**: Download [RealVNC Viewer](https://www.realvnc.com/en/connect/download/viewer/)
 
-You should see the SweetHome3D GUI!
+**Connect to:** `localhost:5901`
+
+You should see the SweetHome3D GUI with Cost Estimator ready to use!
 
 ## Cost Estimator Plugin
 
-The Cost Estimator plugin is included and calculates construction costs (framing, drywall, electrical, plumbing, etc.) from floor plans.
+The Cost Estimator plugin calculates construction costs (framing, drywall, electrical, plumbing, etc.) from floor plans.
 
-### Using the Plugin (Dev)
+### Easiest Dev Setup (Dev Container)
 
-**Easy one-liner setup:**
-
-Linux/Mac:
 ```bash
-./setup-plugins.sh
+run-with-vnc
 ```
 
-Windows:
-```bash
-setup-plugins.bat
-```
-
-Or manually:
-```bash
-mkdir -p ~/.sweethome3d/plugins
-cp install/plugins/CostEstimatorPlugin.jar ~/.sweethome3d/plugins/
-```
-
-**Then run the app:**
-```bash
-export DISPLAY=:1        # Set display (dev container)
-java -jar install/SweetHome3D-*.jar
-```
+That's it! This command:
+- ✅ Builds the app (if needed)
+- ✅ Automatically installs the Cost Estimator plugin
+- ✅ Starts VNC server
+- ✅ Launches the app with GUI
+- ✅ Plugin ready to use immediately
 
 **Access in the app:**
 1. Open or create a floor plan
 2. Click: **Tools → Cost Estimator...**
 3. View itemized cost breakdown
+
+### Manual Setup (if needed)
+
+```bash
+./setup-plugins.sh   # Linux/Mac
+# OR
+setup-plugins.bat    # Windows
+```
 
 ## Quick Commands
 
