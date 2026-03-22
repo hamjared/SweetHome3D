@@ -40,12 +40,6 @@ COPY . /workspace/
 # Copy custom bashrc for nicer terminal
 COPY .devcontainer/.bashrc /root/.bashrc
 
-# Copy VNC startup scripts
-COPY .devcontainer/start-vnc.sh /usr/local/bin/start-vnc
-COPY .devcontainer/run-with-vnc.sh /usr/local/bin/run-with-vnc
-
-# Make scripts executable
-RUN chmod +x /usr/local/bin/start-vnc /usr/local/bin/run-with-vnc
 
 # Build the project on container start
 # (optional - can be run manually)

@@ -38,7 +38,7 @@ def get_docker_compose_cmd():
     """Get the docker-compose command with proper file path"""
     script_dir = Path(__file__).parent
     compose_file = script_dir / 'docker-compose.yml'
-    return ['docker-compose', '-f', str(compose_file)]
+    return ['docker', 'compose', '-f', str(compose_file)]
 
 def run_in_container(cmd):
     """Run a command in the container if not already in one"""
@@ -51,8 +51,8 @@ def run_in_container(cmd):
 
 def build_gradle():
     """Build Gradle jar executable"""
-    print_status("Building: jarExecutable")
-    result = run_in_container("./gradlew jarExecutable")
+    print_status("Building: using ./gradlew build")
+    result = run_in_container("./gradlew build")
     if result.returncode == 0:
         print_status("Build successful!")
     return result.returncode
@@ -68,7 +68,7 @@ def clean():
 def rebuild():
     """Clean and rebuild"""
     print_status("Rebuilding (clean + build)")
-    result = run_in_container("./gradlew clean jarExecutable")
+    result = run_in_container("./gradlew clean build")
     if result.returncode == 0:
         print_status("Rebuild successful!")
     return result.returncode
@@ -77,13 +77,13 @@ def run_app():
     """Build and run the application"""
     if is_in_container():
         print_status("Building and running application")
-        result = subprocess.run("./gradlew jarExecutable", shell=True, check=False)
+        result = subprocess.run("./gradlew build", shell=True, check=False)
         if result.returncode != 0:
             print_error("Build failed")
             return 1
 
         # Find the jar file
-        jar_files = sorted(Path('install').glob('SweetHome3D-*.jar'), reverse=True)
+        jar_files = sorted(Path('build/libs').glob('SweetHome3D-*.jar'), reverse=True)
         if not jar_files:
             print_error("Could not find built JAR file")
             return 1
@@ -93,7 +93,7 @@ def run_app():
         return subprocess.run([sys.executable, '-c', f'import subprocess; subprocess.run(["java", "-jar", "{jar_file}"])'], check=False).returncode
     else:
         docker_cmd = get_docker_compose_cmd()
-        docker_cmd.extend(['exec', 'sweethome-dev', 'bash', '-c', './gradlew jarExecutable && java -jar install/SweetHome3D-*.jar'])
+        docker_cmd.extend(['exec', 'sweethome-dev', 'bash', '-c', './gradlew jarExecutable && java -jar build/libs/SweetHome3D-*.jar'])
         return subprocess.run(docker_cmd, check=False).returncode
 
 def start_container():

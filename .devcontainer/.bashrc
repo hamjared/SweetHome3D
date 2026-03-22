@@ -103,6 +103,8 @@ alias build='python .devcontainer/build.py build'
 alias rebuild='python .devcontainer/build.py rebuild'
 alias run='python .devcontainer/build.py run'
 alias clean='python .devcontainer/build.py clean'
+alias start-vnc='cd /workspace && .devcontainer/start-vnc.sh'
+alias run-with-vnc='cd /workspace && .devcontainer/run-with-vnc.sh'
 
 help() {
     echo ""
