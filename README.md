@@ -17,11 +17,13 @@ That's it! You're ready to build.
 Once the container is open, open a terminal in VS Code and run:
 
 ```bash
-# Build the executable JAR
+# Build the executable JAR with plugin
 build
 
-# Or use Ant directly
-ant jarExecutable
+# (Optional) Setup plugin for development
+./setup-plugins.sh   # Linux/Mac
+# OR
+setup-plugins.bat    # Windows
 ```
 
 The built JAR will be in `install/SweetHome3D-*.jar`
@@ -52,6 +54,41 @@ localhost:5901
 
 You should see the SweetHome3D GUI!
 
+## Cost Estimator Plugin
+
+The Cost Estimator plugin is included and calculates construction costs (framing, drywall, electrical, plumbing, etc.) from floor plans.
+
+### Using the Plugin (Dev)
+
+**Easy one-liner setup:**
+
+Linux/Mac:
+```bash
+./setup-plugins.sh
+```
+
+Windows:
+```bash
+setup-plugins.bat
+```
+
+Or manually:
+```bash
+mkdir -p ~/.sweethome3d/plugins
+cp install/plugins/CostEstimatorPlugin.jar ~/.sweethome3d/plugins/
+```
+
+**Then run the app:**
+```bash
+export DISPLAY=:1        # Set display (dev container)
+java -jar install/SweetHome3D-*.jar
+```
+
+**Access in the app:**
+1. Open or create a floor plan
+2. Click: **Tools → Cost Estimator...**
+3. View itemized cost breakdown
+
 ## Quick Commands
 
 All available from any container terminal:
@@ -63,6 +100,8 @@ All available from any container terminal:
 | `clean` | Remove all build artifacts |
 | `start-vnc` | Start VNC server for GUI access |
 | `run-with-vnc` | Build and run with VNC in one command |
+| `./setup-plugins.sh` | Install Cost Estimator plugin (Linux/Mac) |
+| `setup-plugins.bat` | Install Cost Estimator plugin (Windows) |
 
 ## Remote SSH + VS Code?
 
