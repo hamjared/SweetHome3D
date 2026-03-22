@@ -109,7 +109,7 @@ jobs:
             **Option 3: Standalone JAR**
             - Download just `SweetHome3D-${{ steps.version.outputs.version }}.jar`
             - Run: `java -jar SweetHome3D-${{ steps.version.outputs.version }}.jar`
-            - Plugin: Download `CostEstimatorPlugin.jar` and place in `~/.sweethome3d/plugins/`
+            - Plugin: Download `CostEstimatorPlugin.jar` and place in `~/.eteks/sweethome3d/plugins/` (Linux/Mac) or `%APPDATA%\eTeks\Sweet Home 3D\plugins` (Windows)
 
             ### Features
             - ✅ Java 21 LTS

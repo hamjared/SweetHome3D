@@ -1,7 +1,7 @@
 #!/bin/bash
 # Setup script to install plugins in the Sweet Home 3D config directory
 
-PLUGINS_DIR="$HOME/.sweethome3d/plugins"
+PLUGINS_DIR="$HOME/.eteks/sweethome3d/plugins"
 PLUGIN_JAR="install/plugins/CostEstimatorPlugin.jar"
 
 if [ ! -f "$PLUGIN_JAR" ]; then
