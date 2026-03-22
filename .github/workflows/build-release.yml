@@ -9,8 +9,12 @@ permissions:
   contents: write
 
 jobs:
-  build-and-release:
+  build-jars:
+    name: Build JARs (Linux)
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -45,25 +49,23 @@ jobs:
 
             Built from commit: ${{ github.sha }}
 
-            ### Download Options
+            ### Downloads
 
-            **Option 1: Everything Bundled (Recommended)**
-            - **SweetHome3D-${{ steps.version.outputs.version }}-with-plugin.jar** - Main application with Cost Estimator plugin already included
-            - Simply run: `java -jar SweetHome3D-${{ steps.version.outputs.version }}-with-plugin.jar`
+            #### Windows (Recommended for Windows)
+            - **SweetHome3D-${{ steps.version.outputs.version }}-installer.exe** - Windows installer (includes JRE, no Java installation needed)
 
-            **Option 2: Separate Components**
-            - **SweetHome3D-${{ steps.version.outputs.version }}.jar** - Main application only
-            - **CostEstimatorPlugin.jar** - Cost Estimator plugin (place in ~/.sweethome3d/plugins/)
+            #### Cross-Platform (Java Required)
+            - **SweetHome3D-${{ steps.version.outputs.version }}-with-plugin.jar** - Everything bundled (recommended)
+              - Run: `java -jar SweetHome3D-${{ steps.version.outputs.version }}-with-plugin.jar`
+            - **SweetHome3D-${{ steps.version.outputs.version }}.jar** - Main app only
+            - **CostEstimatorPlugin.jar** - Plugin only
 
             ### Features
-            - Java 21 LTS
-            - Gradle-based build system
-            - Cost Estimator plugin for construction cost estimation (framing, drywall, electrical, plumbing, etc.)
+            - ✅ Java 21 LTS
+            - ✅ Gradle build system
+            - ✅ Cost Estimator plugin (framing, drywall, electrical, plumbing cost estimation)
 
-            ### Installation
-            Use the bundled version for simplicity: `java -jar SweetHome3D-${{ steps.version.outputs.version }}-with-plugin.jar`
-
-      - name: Upload bundled JAR (with plugin)
+      - name: Upload bundled JAR
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -73,7 +75,7 @@ jobs:
           asset_name: SweetHome3D-${{ steps.version.outputs.version }}-with-plugin.jar
           asset_content_type: application/java-archive
 
-      - name: Upload main JAR (without plugin)
+      - name: Upload main JAR
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -92,3 +94,52 @@ jobs:
           asset_path: ./install/plugins/CostEstimatorPlugin.jar
           asset_name: CostEstimatorPlugin.jar
           asset_content_type: application/java-archive
+
+  build-windows-installer:
+    name: Build Windows Installer
+    runs-on: windows-latest
+    needs: build-jars
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Build with Gradle
+        run: ./gradlew jarExecutableWithPlugin
+
+      - name: Create Windows installer
+        run: |
+          $VERSION = ((Get-Content build.gradle.kts | Select-String 'version = "([^"]+)"').Matches[0].Groups[1].Value)
+          $JAR_PATH = "install/SweetHome3D-$VERSION-with-plugin.jar"
+          $OUTPUT_DIR = "build/installer"
+          New-Item -ItemType Directory -Path $OUTPUT_DIR -Force | Out-Null
+          jpackage `
+            --input install `
+            --name SweetHome3D `
+            --main-jar "SweetHome3D-$VERSION-with-plugin.jar" `
+            --main-class com.eteks.sweethome3d.SweetHome3DBootstrap `
+            --type exe `
+            --dest $OUTPUT_DIR `
+            --app-version $VERSION `
+            --vendor "Space Mushrooms" `
+            --description "Sweet Home 3D - Interior 2D design with Cost Estimator" `
+            --win-menu `
+            --win-menu-group SweetHome3D `
+            --win-shortcut `
+            --win-shortcut-prompt
+          Write-Host "✓ Installer created"
+          Get-ChildItem "$OUTPUT_DIR/*.exe" | ForEach-Object { Write-Host "✓ $_" }
+
+      - name: Upload Windows installer
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.build-jars.outputs.upload_url }}
+          asset_path: ./build/installer/SweetHome3D-${{ needs.build-jars.outputs.version }}.exe
+          asset_name: SweetHome3D-${{ needs.build-jars.outputs.version }}-installer.exe
+          asset_content_type: application/octet-stream

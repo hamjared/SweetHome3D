@@ -265,6 +265,47 @@ tasks.build {
     dependsOn("jarExecutable")
 }
 
+// Windows installer with bundled JRE using jpackage
+tasks.register<Exec>("createWindowsInstaller") {
+    group = "build"
+    description = "Create Windows .exe installer with bundled JRE (requires Windows + JDK 16+)"
+
+    dependsOn("jarExecutableWithPlugin")
+
+    // Only run on Windows
+    onlyIf {
+        System.getProperty("os.name").lowercase().contains("windows")
+    }
+
+    val appVersion = version.toString()
+    val jarPath = file("install/SweetHome3D-${appVersion}-with-plugin.jar").absolutePath
+    val outputDir = file("build/installer").absolutePath
+
+    file(outputDir).mkdirs()
+
+    commandLine(
+        "jpackage",
+        "--input", file("install").absolutePath,
+        "--name", "SweetHome3D",
+        "--main-jar", "SweetHome3D-${appVersion}-with-plugin.jar",
+        "--main-class", "com.eteks.sweethome3d.SweetHome3DBootstrap",
+        "--type", "exe",
+        "--dest", outputDir,
+        "--app-version", appVersion,
+        "--vendor", "Space Mushrooms",
+        "--description", "Sweet Home 3D - Interior 2D design application with Cost Estimator",
+        "--icon", "src/resources/icon.png"
+    )
+
+    doLast {
+        println("✓ Windows installer created in: $outputDir")
+        val exeFile = file("$outputDir/SweetHome3D-${appVersion}.exe")
+        if (exeFile.exists()) {
+            println("✓ Installer: ${exeFile.name} (${exeFile.length() / (1024 * 1024)} MB)")
+        }
+    }
+}
+
 application {
     mainClass.set("com.eteks.sweethome3d.SweetHome3DBootstrap")
 }
