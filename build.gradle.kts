@@ -162,6 +162,12 @@ tasks.register<Jar>("costEstimatorPlugin") {
         include("com/eteks/sweethome3d/plugin/costestimator/**")
     }
 
+    // ApplicationPlugin.properties must be at JAR root for plugin discovery
+    from(sourceSets.main.get().output.resourcesDir) {
+        include("com/eteks/sweethome3d/plugin/costestimator/ApplicationPlugin.properties")
+        into("")  // Move to root
+    }
+
     manifest {
         attributes(
             "Implementation-Title" to "Cost Estimator Plugin",
