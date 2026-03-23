@@ -54,6 +54,10 @@ dependencies {
     // JNLP needed only for applet/web start (gracefully degrades if missing)
     implementation(files("libtest/jnlp.jar"))
 
+    // Logging
+    implementation("org.apache.logging.log4j:log4j-api:2.23.1")
+    runtimeOnly("org.apache.logging.log4j:log4j-core:2.23.1")
+
     // Test dependencies
     testImplementation("junit:junit:3.8.2")
     testImplementation(files("libtest/abbot.jar"))
