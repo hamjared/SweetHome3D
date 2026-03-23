@@ -72,6 +72,38 @@ final class WallUtils {
   }
 
   /**
+   * Returns the gross wall area in square feet, counting each wall once
+   * (regardless of finished sides), then subtracting door/window opening areas.
+   * Used for insulation calculations where each cavity is insulated once.
+   */
+  static float totalWallAreaSqFt(Home home) {
+    float defaultHeightFt = BOMUtil.cmToFeet(home.getWallHeight());
+    float grossSqFt = 0f;
+
+    for (Wall wall : home.getWalls()) {
+      float lengthFt = BOMUtil.cmToFeet(wall.getLength());
+      Float heightCm = wall.getHeight();
+      float heightFt = (heightCm != null) ? BOMUtil.cmToFeet(heightCm) : defaultHeightFt;
+      grossSqFt += lengthFt * heightFt;
+    }
+
+    float openingSqFt = 0f;
+    for (HomePieceOfFurniture piece : home.getFurniture()) {
+      if (piece instanceof HomeDoorOrWindow) {
+        openingSqFt += (piece.getWidth() * piece.getHeight()) / BOMUtil.SQ_CM_PER_SQ_FT;
+      }
+    }
+
+    float netSqFt = Math.max(0f, grossSqFt - openingSqFt);
+
+    LOG.info("[WallUtils] Total wall area (insulation): gross=" + String.format("%.1f", grossSqFt)
+        + " sqft, openings=" + String.format("%.1f", openingSqFt) + " sqft deducted"
+        + ", net=" + String.format("%.1f", netSqFt) + " sqft");
+
+    return netSqFt;
+  }
+
+  /**
    * Returns the total ceiling area in square feet for all rooms whose ceiling
    * is visible (room.isCeilingVisible() == true).
    *

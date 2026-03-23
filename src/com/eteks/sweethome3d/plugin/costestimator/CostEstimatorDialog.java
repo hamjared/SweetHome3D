@@ -223,6 +223,7 @@ public class CostEstimatorDialog extends JDialog {
   private boolean stageIsDIY(BOMReport.Stage stage) {
     switch (stage) {
       case FRAMING:    return settings.getFraming().isDIY;
+      case INSULATION: return settings.getInsulation().isDIY;
       case DRYWALL:    return settings.getDrywall().isDIY;
       case PAINT:      return settings.getPaint().isDIY;
       case ELECTRICAL: return settings.getElectrical().isDIY;
@@ -234,12 +235,13 @@ public class CostEstimatorDialog extends JDialog {
 
   private void setStageDIY(BOMReport.Stage stage, boolean diy) {
     switch (stage) {
-      case FRAMING:    settings.getFraming().isDIY    = diy; break;
-      case DRYWALL:    settings.getDrywall().isDIY    = diy; break;
-      case PAINT:      settings.getPaint().isDIY      = diy; break;
-      case ELECTRICAL: settings.getElectrical().isDIY = diy; break;
-      case PLUMBING:   settings.getPlumbing().isDIY   = diy; break;
-      case FLOORING:   settings.getFlooring().isDIY   = diy; break;
+      case FRAMING:    settings.getFraming().isDIY       = diy; break;
+      case INSULATION: settings.getInsulation().isDIY    = diy; break;
+      case DRYWALL:    settings.getDrywall().isDIY       = diy; break;
+      case PAINT:      settings.getPaint().isDIY         = diy; break;
+      case ELECTRICAL: settings.getElectrical().isDIY    = diy; break;
+      case PLUMBING:   settings.getPlumbing().isDIY      = diy; break;
+      case FLOORING:   settings.getFlooring().isDIY      = diy; break;
     }
   }
 

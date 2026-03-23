@@ -25,6 +25,7 @@ public class BOMReport implements Serializable {
 
   public enum Stage {
     FRAMING("Framing"),
+    INSULATION("Insulation"),
     DRYWALL("Drywall"),
     PAINT("Paint"),
     ELECTRICAL("Electrical"),

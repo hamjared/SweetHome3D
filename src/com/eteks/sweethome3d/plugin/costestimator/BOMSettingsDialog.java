@@ -60,6 +60,7 @@ public class BOMSettingsDialog extends JDialog {
   private JRadioButton spacing16;
   private JRadioButton spacing24;
   private JCheckBox    allFloatingBox;
+  private JCheckBox    wallsInsulatedBox;
 
   public BOMSettingsDialog(JDialog owner, BOMSettings settings, List<Room> rooms) {
     super(owner, "BOM Settings", true);
@@ -72,9 +73,10 @@ public class BOMSettingsDialog extends JDialog {
     setLayout(new BorderLayout());
 
     JTabbedPane tabs = new JTabbedPane();
-    tabs.addTab("Global",     createGlobalTab());
-    tabs.addTab("Framing",    createFramingTab());
-    tabs.addTab("Drywall",    createDrywallTab());
+    tabs.addTab("Global",      createGlobalTab());
+    tabs.addTab("Framing",     createFramingTab());
+    tabs.addTab("Insulation",  createInsulationTab());
+    tabs.addTab("Drywall",     createDrywallTab());
     tabs.addTab("Paint",      createPaintTab());
     tabs.addTab("Flooring",   createFlooringTab());
     tabs.addTab("Electrical", createElectricalTab());
@@ -121,6 +123,7 @@ public class BOMSettingsDialog extends JDialog {
         : BOMSettings.LumberSize.TWO_BY_FOUR);
     settings.setStudSpacingInches(spacing24.isSelected() ? 24 : 16);
     settings.setAllWallsFloating(allFloatingBox.isSelected());
+    settings.setWallsInsulated(wallsInsulatedBox.isSelected());
 
     // Wet rooms
     List<Integer> wet = new ArrayList<>();
@@ -182,6 +185,16 @@ public class BOMSettingsDialog extends JDialog {
     panel.add(allFloatingBox, gbc);
     gbc.gridwidth = 1;
 
+    // Insulation
+    gbc.gridx = 0; gbc.gridy = 6; gbc.gridwidth = 2;
+    panel.add(new JLabel("Insulation:"), gbc);
+    gbc.gridwidth = 1;
+
+    wallsInsulatedBox = new JCheckBox("Walls are insulated", settings.isWallsInsulated());
+    gbc.gridx = 0; gbc.gridy = 7; gbc.gridwidth = 2;
+    panel.add(wallsInsulatedBox, gbc);
+    gbc.gridwidth = 1;
+
     return wrapInScroll(panel);
   }
 
@@ -198,6 +211,19 @@ public class BOMSettingsDialog extends JDialog {
     p.addField("Labor per stud ($):",        fs.laborPerStud,     v -> fs.laborPerStud     = v);
     p.addField("Labor per lin ft plate ($):", fs.laborPerLinFtPlate, v -> fs.laborPerLinFtPlate = v);
     p.addDIYToggle(fs.isDIY, v -> fs.isDIY = v);
+    return wrapInScroll(p);
+  }
+
+  private JPanel createInsulationTab() {
+    BOMSettings.InsulationSettings is = settings.getInsulation();
+    FieldPanel p = new FieldPanel();
+    p.addSectionHeader("Wall insulation (controlled by global 'Walls are insulated' setting)");
+    p.addField("Cost per sq ft — walls ($):",  is.costPerSqFtWall,    v -> is.costPerSqFtWall    = v);
+    p.addField("Labor per sq ft — walls ($):", is.laborPerSqFtWall,   v -> is.laborPerSqFtWall   = v);
+    p.addSectionHeader("Ceiling insulation (always included)");
+    p.addField("Cost per sq ft — ceiling ($):",  is.costPerSqFtCeiling,  v -> is.costPerSqFtCeiling  = v);
+    p.addField("Labor per sq ft — ceiling ($):", is.laborPerSqFtCeiling, v -> is.laborPerSqFtCeiling = v);
+    p.addDIYToggle(is.isDIY, v -> is.isDIY = v);
     return wrapInScroll(p);
   }
 

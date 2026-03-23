@@ -26,6 +26,7 @@ public class BOMCalculator {
 
   private static final StageCalculator[] CALCULATORS = {
     new FramingCalculator(),
+    new InsulationCalculator(),
     new DrywallCalculator(),
     new PaintCalculator(),
     new ElectricalCalculator(),

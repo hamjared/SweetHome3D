@@ -41,9 +41,12 @@ public class BOMSettings implements Serializable {
   private int studSpacingInches = 16;
   /** When true, all walls are treated as floating (concrete slab) walls. */
   private boolean allWallsFloating = false;
+  /** When true, wall insulation is included in the BOM. */
+  private boolean wallsInsulated = false;
 
   // Per-stage
   private FramingSettings framing = new FramingSettings();
+  private InsulationSettings insulation = new InsulationSettings();
   private DrywallSettings drywall = new DrywallSettings();
   private PaintSettings paint = new PaintSettings();
   private FlooringSettings flooring = new FlooringSettings();
@@ -62,7 +65,11 @@ public class BOMSettings implements Serializable {
   public boolean isAllWallsFloating() { return allWallsFloating; }
   public void setAllWallsFloating(boolean v) { this.allWallsFloating = v; }
 
+  public boolean isWallsInsulated() { return wallsInsulated; }
+  public void setWallsInsulated(boolean v) { this.wallsInsulated = v; }
+
   public FramingSettings getFraming() { return framing; }
+  public InsulationSettings getInsulation() { return insulation; }
   public DrywallSettings getDrywall() { return drywall; }
   public PaintSettings getPaint() { return paint; }
   public FlooringSettings getFlooring() { return flooring; }
@@ -75,6 +82,20 @@ public class BOMSettings implements Serializable {
   // -------------------------------------------------------------------------
   // Per-stage settings classes
   // -------------------------------------------------------------------------
+
+  public static class InsulationSettings implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    /** Cost per sq ft of wall batt insulation. */
+    public float costPerSqFtWall = 0.75f;
+    /** Cost per sq ft of ceiling insulation (blown or batt). */
+    public float costPerSqFtCeiling = 1.50f;
+    /** Labor per sq ft of wall insulation installed. */
+    public float laborPerSqFtWall = 0.50f;
+    /** Labor per sq ft of ceiling insulation installed. */
+    public float laborPerSqFtCeiling = 0.75f;
+    public boolean isDIY = false;
+  }
 
   /** Framing stage settings. Board costs are per 8-ft board; plate costs are per lin ft. */
   public static class FramingSettings implements Serializable {
