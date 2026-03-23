@@ -37,13 +37,20 @@ public class DrywallCalculator implements StageCalculator {
     BOMSettings.DrywallSettings ds = settings.getDrywall();
     float wallSqFt    = WallUtils.finishedWallAreaSqFt(home);
     float ceilingSqFt = WallUtils.ceilingAreaSqFt(home);
+    float finishSqFt  = wallSqFt + ceilingSqFt;
     int wallSheets    = (int) Math.ceil(wallSqFt    * (1f + ds.wasteFactor) / SHEET_SQ_FT);
     int ceilingSheets = (int) Math.ceil(ceilingSqFt * (1f + ds.wasteFactor) / SHEET_SQ_FT);
+    int tapeRolls     = (ds.sqFtPerTapeRoll > 0 && finishSqFt > 0)
+        ? (int) Math.ceil(finishSqFt / ds.sqFtPerTapeRoll) : 0;
+    int mudBuckets    = (ds.sqFtPerMudBucket > 0 && finishSqFt > 0)
+        ? (int) Math.ceil(finishSqFt / ds.sqFtPerMudBucket) : 0;
 
     LOG.info("[DrywallCalculator] walls=" + String.format("%.1f", wallSqFt)
         + " sqft (" + wallSheets + " sheets)"
         + ", ceiling=" + String.format("%.1f", ceilingSqFt)
         + " sqft (" + ceilingSheets + " sheets)"
+        + ", finish=" + String.format("%.1f", finishSqFt) + " sqft"
+        + ", tape=" + tapeRolls + " rolls, mud=" + mudBuckets + " buckets"
         + ", waste=" + (int)(ds.wasteFactor * 100) + "%"
         + ", isDIY=" + ds.isDIY);
 
@@ -52,18 +59,28 @@ public class DrywallCalculator implements StageCalculator {
     if (wallSheets > 0) {
       items.add(new MaterialLineItem("Drywall sheet (4×8) — walls", wallSheets, "sheet",
           ds.costPerSheet));
-      if (!ds.isDIY) {
-        items.add(new MaterialLineItem("Labor — hang wall drywall", wallSheets, "sheet",
-            ds.laborPerSheet, true));
-      }
     }
 
     if (ceilingSheets > 0) {
       items.add(new MaterialLineItem("Drywall sheet (4×8) — ceiling", ceilingSheets, "sheet",
           ds.costPerSheet));
+    }
+
+    if (tapeRolls > 0) {
+      items.add(new MaterialLineItem("Drywall tape", tapeRolls, "roll", ds.costPerTapeRoll));
+    }
+
+    if (mudBuckets > 0) {
+      items.add(new MaterialLineItem("Joint compound (4.5 gal)", mudBuckets, "bucket",
+          ds.costPerMudBucket));
+    }
+
+    if (finishSqFt > 0) {
+      items.add(new MaterialLineItem("Texture", (int) Math.ceil(finishSqFt), "sqft",
+          ds.costPerSqFtTexture));
       if (!ds.isDIY) {
-        items.add(new MaterialLineItem("Labor — hang ceiling drywall", ceilingSheets, "sheet",
-            ds.laborPerSheet, true));
+        items.add(new MaterialLineItem("Labor — hang, tape, mud & texture",
+            (int) Math.ceil(finishSqFt), "sqft", ds.laborPerSqFt, true));
       }
     }
 

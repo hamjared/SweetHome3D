@@ -230,9 +230,14 @@ public class BOMSettingsDialog extends JDialog {
   private JPanel createDrywallTab() {
     BOMSettings.DrywallSettings ds = settings.getDrywall();
     FieldPanel p = new FieldPanel();
-    p.addField("Cost per 4×8 sheet ($):", ds.costPerSheet,  v -> ds.costPerSheet  = v);
-    p.addField("Waste factor (0–1):",      ds.wasteFactor,   v -> ds.wasteFactor   = v);
-    p.addField("Labor per sheet ($):",     ds.laborPerSheet, v -> ds.laborPerSheet = v);
+    p.addField("Cost per 4×8 sheet ($):",      ds.costPerSheet,       v -> ds.costPerSheet       = v);
+    p.addField("Waste factor (0–1):",           ds.wasteFactor,        v -> ds.wasteFactor        = v);
+    p.addField("Tape cost per roll ($):",       ds.costPerTapeRoll,    v -> ds.costPerTapeRoll    = v);
+    p.addIntField("Sq ft per tape roll:",       ds.sqFtPerTapeRoll,    v -> ds.sqFtPerTapeRoll    = v);
+    p.addField("Mud cost per bucket ($):",      ds.costPerMudBucket,   v -> ds.costPerMudBucket   = v);
+    p.addIntField("Sq ft per mud bucket:",      ds.sqFtPerMudBucket,   v -> ds.sqFtPerMudBucket   = v);
+    p.addField("Texture cost per sq ft ($):",   ds.costPerSqFtTexture, v -> ds.costPerSqFtTexture = v);
+    p.addField("Labor per sq ft ($):",          ds.laborPerSqFt,       v -> ds.laborPerSqFt       = v);
     p.addDIYToggle(ds.isDIY, v -> ds.isDIY = v);
     return wrapInScroll(p);
   }

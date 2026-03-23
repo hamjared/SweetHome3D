@@ -106,10 +106,15 @@ public class BOMSettings implements Serializable {
     p.setProperty("insulation.laborPerSqFtWall",  String.valueOf(insulation.laborPerSqFtWall));
     p.setProperty("insulation.laborPerSqFtCeiling",String.valueOf(insulation.laborPerSqFtCeiling));
     // Drywall
-    p.setProperty("drywall.isDIY",         String.valueOf(drywall.isDIY));
-    p.setProperty("drywall.costPerSheet",  String.valueOf(drywall.costPerSheet));
-    p.setProperty("drywall.wasteFactor",   String.valueOf(drywall.wasteFactor));
-    p.setProperty("drywall.laborPerSheet", String.valueOf(drywall.laborPerSheet));
+    p.setProperty("drywall.isDIY",              String.valueOf(drywall.isDIY));
+    p.setProperty("drywall.costPerSheet",       String.valueOf(drywall.costPerSheet));
+    p.setProperty("drywall.wasteFactor",        String.valueOf(drywall.wasteFactor));
+    p.setProperty("drywall.costPerTapeRoll",    String.valueOf(drywall.costPerTapeRoll));
+    p.setProperty("drywall.sqFtPerTapeRoll",    String.valueOf(drywall.sqFtPerTapeRoll));
+    p.setProperty("drywall.costPerMudBucket",   String.valueOf(drywall.costPerMudBucket));
+    p.setProperty("drywall.sqFtPerMudBucket",   String.valueOf(drywall.sqFtPerMudBucket));
+    p.setProperty("drywall.costPerSqFtTexture", String.valueOf(drywall.costPerSqFtTexture));
+    p.setProperty("drywall.laborPerSqFt",       String.valueOf(drywall.laborPerSqFt));
     // Paint
     p.setProperty("paint.isDIY",                 String.valueOf(paint.isDIY));
     p.setProperty("paint.costPerGallonPrimer",   String.valueOf(paint.costPerGallonPrimer));
@@ -169,10 +174,15 @@ public class BOMSettings implements Serializable {
     s.insulation.laborPerSqFtWall   = parseFloat(p, "insulation.laborPerSqFtWall",   s.insulation.laborPerSqFtWall);
     s.insulation.laborPerSqFtCeiling= parseFloat(p, "insulation.laborPerSqFtCeiling",s.insulation.laborPerSqFtCeiling);
     // Drywall
-    s.drywall.isDIY        = parseBool(p,  "drywall.isDIY",        s.drywall.isDIY);
-    s.drywall.costPerSheet = parseFloat(p, "drywall.costPerSheet", s.drywall.costPerSheet);
-    s.drywall.wasteFactor  = parseFloat(p, "drywall.wasteFactor",  s.drywall.wasteFactor);
-    s.drywall.laborPerSheet= parseFloat(p, "drywall.laborPerSheet",s.drywall.laborPerSheet);
+    s.drywall.isDIY              = parseBool(p,  "drywall.isDIY",              s.drywall.isDIY);
+    s.drywall.costPerSheet       = parseFloat(p, "drywall.costPerSheet",       s.drywall.costPerSheet);
+    s.drywall.wasteFactor        = parseFloat(p, "drywall.wasteFactor",        s.drywall.wasteFactor);
+    s.drywall.costPerTapeRoll    = parseFloat(p, "drywall.costPerTapeRoll",    s.drywall.costPerTapeRoll);
+    s.drywall.sqFtPerTapeRoll    = parseInt(p,   "drywall.sqFtPerTapeRoll",    s.drywall.sqFtPerTapeRoll);
+    s.drywall.costPerMudBucket   = parseFloat(p, "drywall.costPerMudBucket",   s.drywall.costPerMudBucket);
+    s.drywall.sqFtPerMudBucket   = parseInt(p,   "drywall.sqFtPerMudBucket",   s.drywall.sqFtPerMudBucket);
+    s.drywall.costPerSqFtTexture = parseFloat(p, "drywall.costPerSqFtTexture", s.drywall.costPerSqFtTexture);
+    s.drywall.laborPerSqFt       = parseFloat(p, "drywall.laborPerSqFt",       s.drywall.laborPerSqFt);
     // Paint
     s.paint.isDIY                = parseBool(p,  "paint.isDIY",                s.paint.isDIY);
     s.paint.costPerGallonPrimer  = parseFloat(p, "paint.costPerGallonPrimer",  s.paint.costPerGallonPrimer);
@@ -268,8 +278,18 @@ public class BOMSettings implements Serializable {
     public float costPerSheet = 15.00f;
     /** Waste factor as a decimal (0.10 = 10%). */
     public float wasteFactor = 0.10f;
-    /** Labor cost per sheet hung. */
-    public float laborPerSheet = 35.00f;
+    /** Cost per roll of drywall tape. */
+    public float costPerTapeRoll = 8.00f;
+    /** Finished sq ft covered per roll of tape. */
+    public int sqFtPerTapeRoll = 200;
+    /** Cost per bucket of joint compound (4.5 gal). */
+    public float costPerMudBucket = 20.00f;
+    /** Finished sq ft covered per bucket of mud. */
+    public int sqFtPerMudBucket = 100;
+    /** Texture material cost per sq ft. */
+    public float costPerSqFtTexture = 0.15f;
+    /** Combined labor cost per sq ft (hang, tape, mud, and texture). */
+    public float laborPerSqFt = 2.50f;
     public boolean isDIY = false;
   }
 
