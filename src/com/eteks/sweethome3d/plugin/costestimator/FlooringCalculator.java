@@ -11,16 +11,19 @@
 package com.eteks.sweethome3d.plugin.costestimator;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
+import com.eteks.sweethome3d.model.FlooringType;
 import com.eteks.sweethome3d.model.Home;
 import com.eteks.sweethome3d.model.Room;
 
 /**
- * Calculates flooring material and labor line items.
+ * Calculates flooring material and labor line items, broken down by flooring type.
  *
- * Effective sq ft = sum(room.getArea()) × (1 + wasteFactor)
+ * Effective sq ft per type = rawSqFt × (1 + wasteFactor)
  */
 public class FlooringCalculator implements StageCalculator {
   private static final Logger LOG = Logger.getLogger(FlooringCalculator.class.getName());
@@ -34,24 +37,40 @@ public class FlooringCalculator implements StageCalculator {
   public List<MaterialLineItem> calculate(Home home, BOMSettings settings) {
     BOMSettings.FlooringSettings fs = settings.getFlooring();
 
-    float rawSqFt = 0f;
-    for (Room room : home.getRooms()) {
-      rawSqFt += Math.abs(room.getArea()) / BOMUtil.SQ_CM_PER_SQ_FT;
+    // Bucket raw sq ft by flooring type (preserving enum order)
+    Map<FlooringType, Float> rawByType = new LinkedHashMap<>();
+    for (FlooringType type : FlooringType.values()) {
+      rawByType.put(type, 0f);
     }
-    float effectiveSqFt = rawSqFt * (1f + fs.wasteFactor);
-
-    LOG.info("[FlooringCalculator] rawArea=" + String.format("%.1f", rawSqFt)
-        + " sqft, effective=" + String.format("%.1f", effectiveSqFt)
-        + " sqft, isDIY=" + fs.isDIY);
+    for (Room room : home.getRooms()) {
+      FlooringType type = room.getFlooringType();
+      rawByType.put(type, rawByType.get(type) + Math.abs(room.getArea()) / BOMUtil.SQ_CM_PER_SQ_FT);
+    }
 
     List<MaterialLineItem> items = new ArrayList<>();
-    if (effectiveSqFt > 0) {
-      items.add(new MaterialLineItem("Flooring", effectiveSqFt, "sq ft", fs.costPerSqFt));
-      if (!fs.isDIY) {
-        items.add(new MaterialLineItem("Labor - flooring install", effectiveSqFt, "sq ft",
-            fs.laborPerSqFt, true));
-      }
+    float totalEffectiveSqFt = 0f;
+
+    for (Map.Entry<FlooringType, Float> entry : rawByType.entrySet()) {
+      float rawSqFt = entry.getValue();
+      if (rawSqFt <= 0f) continue;
+      FlooringType type = entry.getKey();
+      float effectiveSqFt = rawSqFt * (1f + fs.wasteFactor);
+      totalEffectiveSqFt += effectiveSqFt;
+      float cost = fs.getCostForType(type);
+      LOG.info("[FlooringCalculator] " + type.getDisplayName()
+          + " raw=" + String.format("%.1f", rawSqFt)
+          + " effective=" + String.format("%.1f", effectiveSqFt)
+          + " $/sqft=" + cost);
+      items.add(new MaterialLineItem(type.getDisplayName() + " flooring", effectiveSqFt, "sq ft", cost));
     }
+
+    if (!fs.isDIY && totalEffectiveSqFt > 0f) {
+      items.add(new MaterialLineItem("Labor - flooring install", totalEffectiveSqFt, "sq ft",
+          fs.laborPerSqFt, true));
+    }
+
+    LOG.info("[FlooringCalculator] totalEffective=" + String.format("%.1f", totalEffectiveSqFt)
+        + " isDIY=" + fs.isDIY);
     return items;
   }
 }

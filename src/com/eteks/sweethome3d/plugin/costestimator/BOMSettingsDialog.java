@@ -257,7 +257,13 @@ public class BOMSettingsDialog extends JDialog {
   private JPanel createFlooringTab() {
     BOMSettings.FlooringSettings fs = settings.getFlooring();
     FieldPanel p = new FieldPanel();
-    p.addField("Cost per sq ft ($):",  fs.costPerSqFt,   v -> fs.costPerSqFt   = v);
+    p.addSectionHeader("Material cost per sq ft by flooring type");
+    p.addField("Unspecified ($):", fs.costPerSqFtUnspecified, v -> fs.costPerSqFtUnspecified = v);
+    p.addField("Carpet ($):",      fs.costPerSqFtCarpet,      v -> fs.costPerSqFtCarpet      = v);
+    p.addField("Tile ($):",        fs.costPerSqFtTile,        v -> fs.costPerSqFtTile        = v);
+    p.addField("Hardwood ($):",    fs.costPerSqFtHardwood,    v -> fs.costPerSqFtHardwood    = v);
+    p.addField("Laminate ($):",    fs.costPerSqFtLaminate,    v -> fs.costPerSqFtLaminate    = v);
+    p.addSectionHeader("Shared settings");
     p.addField("Waste factor (0–1):", fs.wasteFactor,    v -> fs.wasteFactor   = v);
     p.addField("Labor per sq ft ($):", fs.laborPerSqFt,  v -> fs.laborPerSqFt  = v);
     p.addDIYToggle(fs.isDIY, v -> fs.isDIY = v);

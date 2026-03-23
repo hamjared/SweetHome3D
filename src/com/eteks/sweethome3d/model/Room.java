@@ -41,7 +41,7 @@ public class Room extends HomeObject implements Selectable, Elevatable {
    */
   public enum Property {NAME, NAME_X_OFFSET, NAME_Y_OFFSET, NAME_STYLE, NAME_ANGLE,
       POINTS, AREA_VISIBLE, AREA_X_OFFSET, AREA_Y_OFFSET, AREA_STYLE, AREA_ANGLE,
-      FLOOR_COLOR, FLOOR_TEXTURE, FLOOR_VISIBLE, FLOOR_SHININESS, 
+      FLOOR_COLOR, FLOOR_TEXTURE, FLOOR_VISIBLE, FLOOR_SHININESS, FLOORING_TYPE,
       CEILING_COLOR, CEILING_TEXTURE, CEILING_VISIBLE, CEILING_SHININESS, CEILING_FLAT, LEVEL}
 
   private static final long serialVersionUID = 1L;
@@ -63,6 +63,7 @@ public class Room extends HomeObject implements Selectable, Elevatable {
   private Integer             floorColor;
   private HomeTexture         floorTexture;
   private float               floorShininess;
+  private FlooringType        flooringType;
   private boolean             ceilingVisible;
   private Integer             ceilingColor;
   private HomeTexture         ceilingTexture;
@@ -556,6 +557,25 @@ public class Room extends HomeObject implements Selectable, Elevatable {
       float oldFloorShininess = this.floorShininess;
       this.floorShininess = floorShininess;
       firePropertyChange(Property.FLOOR_SHININESS.name(), oldFloorShininess, floorShininess);
+    }
+  }
+
+  /**
+   * Returns the flooring material type of this room.
+   */
+  public FlooringType getFlooringType() {
+    return this.flooringType != null ? this.flooringType : FlooringType.UNSPECIFIED;
+  }
+
+  /**
+   * Sets the flooring material type of this room. Once this room is updated,
+   * listeners added to this room will receive a change notification.
+   */
+  public void setFlooringType(FlooringType flooringType) {
+    if (flooringType != this.flooringType) {
+      FlooringType oldFlooringType = this.flooringType;
+      this.flooringType = flooringType;
+      firePropertyChange(Property.FLOORING_TYPE.name(), oldFlooringType, flooringType);
     }
   }
 

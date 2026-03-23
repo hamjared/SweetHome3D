@@ -29,6 +29,7 @@ import java.beans.PropertyChangeListener;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -42,6 +43,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import com.eteks.sweethome3d.model.FlooringType;
 import com.eteks.sweethome3d.model.UserPreferences;
 import com.eteks.sweethome3d.tools.OperatingSystem;
 import com.eteks.sweethome3d.viewcontroller.BaseboardChoiceController;
@@ -64,6 +66,8 @@ public class RoomPanel extends JPanel implements DialogView {
   private ColorButton           floorColorButton;
   private JRadioButton          floorTextureRadioButton;
   private JComponent            floorTextureComponent;
+  private JLabel                flooringTypeLabel;
+  private JComboBox<FlooringType> flooringTypeComboBox;
   private JRadioButton          floorMattRadioButton;
   private JRadioButton          floorShinyRadioButton;
   private NullableCheckBox      ceilingVisibleCheckBox;
@@ -276,6 +280,34 @@ public class RoomPanel extends JPanel implements DialogView {
       floorShininessButtonGroup.add(this.floorShinyRadioButton);
       updateFloorShininessRadioButtons(controller);
     }
+
+    // Flooring type combo box
+    this.flooringTypeLabel = new JLabel("Flooring type:");
+    this.flooringTypeComboBox = new JComboBox<>(FlooringType.values());
+    this.flooringTypeComboBox.setSelectedItem(controller.getFlooringType() != null
+        ? controller.getFlooringType() : FlooringType.UNSPECIFIED);
+    final PropertyChangeListener flooringTypeChangeListener = new PropertyChangeListener() {
+      public void propertyChange(PropertyChangeEvent ev) {
+        FlooringType type = controller.getFlooringType();
+        flooringTypeComboBox.setSelectedItem(type != null ? type : FlooringType.UNSPECIFIED);
+      }
+    };
+    controller.addPropertyChangeListener(RoomController.Property.FLOORING_TYPE, flooringTypeChangeListener);
+    this.flooringTypeComboBox.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        controller.removePropertyChangeListener(RoomController.Property.FLOORING_TYPE, flooringTypeChangeListener);
+        FlooringType selected = (FlooringType) flooringTypeComboBox.getSelectedItem();
+        if (selected != null) {
+          controller.setFlooringType(selected);
+          Integer color = selected.getDefaultColor();
+          if (color != null) {
+            controller.setFloorColor(color);
+            controller.setFloorPaint(RoomController.RoomPaint.COLORED);
+          }
+        }
+        controller.addPropertyChangeListener(RoomController.Property.FLOORING_TYPE, flooringTypeChangeListener);
+      }
+    });
 
     if (controller.isPropertyEditable(RoomController.Property.CEILING_VISIBLE)) {
       // Create ceiling visible check box bound to CEILING_VISIBLE controller property
@@ -746,12 +778,14 @@ public class RoomPanel extends JPanel implements DialogView {
           GridBagConstraints.HORIZONTAL, rowInsets, 0, 0));
     }
     // Last row
-    if (this.floorVisibleCheckBox != null || this.floorColorRadioButton != null || this.floorMattRadioButton != null) {
+    if (this.floorVisibleCheckBox != null || this.floorColorRadioButton != null || this.floorMattRadioButton != null
+        || this.flooringTypeComboBox != null) {
       JComponent filler = new JLabel();
       filler.setPreferredSize(new JCheckBox().getPreferredSize());
       JPanel floorPanel = createVerticalTitledPanel(preferences.getLocalizedString(
           RoomPanel.class, "floorPanel.title"),
           new JComponent [][] {{this.floorVisibleCheckBox, null,
+                                this.flooringTypeLabel, this.flooringTypeComboBox,
                                 this.floorColorRadioButton, this.floorColorButton,
                                 this.floorTextureRadioButton, this.floorTextureComponent,
                                 this.ceilingFlatCheckBox != null ? filler : null, null},

@@ -1586,6 +1586,13 @@ public class HomeXMLHandler extends DefaultHandler {
     if (floorShininess != null) {
       room.setFloorShininess(floorShininess);
     }
+    String flooringTypeStr = attributes.get("flooringType");
+    if (flooringTypeStr != null) {
+      try {
+        room.setFlooringType(com.eteks.sweethome3d.model.FlooringType.valueOf(flooringTypeStr));
+      } catch (IllegalArgumentException ignored) {
+      }
+    }
     room.setCeilingVisible(!"false".equals(attributes.get("ceilingVisible")));
     room.setCeilingColor(parseOptionalColor(attributes, "ceilingColor"));
     room.setCeilingTexture(this.textures.get("ceilingTexture"));

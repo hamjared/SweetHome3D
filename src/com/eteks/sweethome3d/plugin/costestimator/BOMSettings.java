@@ -123,10 +123,14 @@ public class BOMSettings implements Serializable {
     p.setProperty("paint.finishCoats",           String.valueOf(paint.finishCoats));
     p.setProperty("paint.laborPerSqFt",          String.valueOf(paint.laborPerSqFt));
     // Flooring
-    p.setProperty("flooring.isDIY",        String.valueOf(flooring.isDIY));
-    p.setProperty("flooring.costPerSqFt",  String.valueOf(flooring.costPerSqFt));
-    p.setProperty("flooring.wasteFactor",  String.valueOf(flooring.wasteFactor));
-    p.setProperty("flooring.laborPerSqFt", String.valueOf(flooring.laborPerSqFt));
+    p.setProperty("flooring.isDIY",                String.valueOf(flooring.isDIY));
+    p.setProperty("flooring.costPerSqFtUnspecified",String.valueOf(flooring.costPerSqFtUnspecified));
+    p.setProperty("flooring.costPerSqFtCarpet",     String.valueOf(flooring.costPerSqFtCarpet));
+    p.setProperty("flooring.costPerSqFtTile",       String.valueOf(flooring.costPerSqFtTile));
+    p.setProperty("flooring.costPerSqFtHardwood",   String.valueOf(flooring.costPerSqFtHardwood));
+    p.setProperty("flooring.costPerSqFtLaminate",   String.valueOf(flooring.costPerSqFtLaminate));
+    p.setProperty("flooring.wasteFactor",           String.valueOf(flooring.wasteFactor));
+    p.setProperty("flooring.laborPerSqFt",          String.valueOf(flooring.laborPerSqFt));
     // Electrical
     p.setProperty("electrical.isDIY",            String.valueOf(electrical.isDIY));
     p.setProperty("electrical.costPerRoomBase",  String.valueOf(electrical.costPerRoomBase));
@@ -191,10 +195,14 @@ public class BOMSettings implements Serializable {
     s.paint.finishCoats          = parseInt(p,   "paint.finishCoats",          s.paint.finishCoats);
     s.paint.laborPerSqFt         = parseFloat(p, "paint.laborPerSqFt",         s.paint.laborPerSqFt);
     // Flooring
-    s.flooring.isDIY        = parseBool(p,  "flooring.isDIY",        s.flooring.isDIY);
-    s.flooring.costPerSqFt  = parseFloat(p, "flooring.costPerSqFt",  s.flooring.costPerSqFt);
-    s.flooring.wasteFactor  = parseFloat(p, "flooring.wasteFactor",  s.flooring.wasteFactor);
-    s.flooring.laborPerSqFt = parseFloat(p, "flooring.laborPerSqFt", s.flooring.laborPerSqFt);
+    s.flooring.isDIY                = parseBool(p,  "flooring.isDIY",                s.flooring.isDIY);
+    s.flooring.costPerSqFtUnspecified=parseFloat(p, "flooring.costPerSqFtUnspecified",s.flooring.costPerSqFtUnspecified);
+    s.flooring.costPerSqFtCarpet    = parseFloat(p, "flooring.costPerSqFtCarpet",    s.flooring.costPerSqFtCarpet);
+    s.flooring.costPerSqFtTile      = parseFloat(p, "flooring.costPerSqFtTile",      s.flooring.costPerSqFtTile);
+    s.flooring.costPerSqFtHardwood  = parseFloat(p, "flooring.costPerSqFtHardwood",  s.flooring.costPerSqFtHardwood);
+    s.flooring.costPerSqFtLaminate  = parseFloat(p, "flooring.costPerSqFtLaminate",  s.flooring.costPerSqFtLaminate);
+    s.flooring.wasteFactor          = parseFloat(p, "flooring.wasteFactor",          s.flooring.wasteFactor);
+    s.flooring.laborPerSqFt         = parseFloat(p, "flooring.laborPerSqFt",         s.flooring.laborPerSqFt);
     // Electrical
     s.electrical.isDIY           = parseBool(p,  "electrical.isDIY",           s.electrical.isDIY);
     s.electrical.costPerRoomBase = parseFloat(p, "electrical.costPerRoomBase", s.electrical.costPerRoomBase);
@@ -310,11 +318,26 @@ public class BOMSettings implements Serializable {
   public static class FlooringSettings implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    public float costPerSqFt = 5.00f;
-    /** Waste factor as a decimal (0.10 = 10%). */
+    /** Material cost per sq ft for rooms with no flooring type set. */
+    public float costPerSqFtUnspecified = 5.00f;
+    public float costPerSqFtCarpet      = 3.50f;
+    public float costPerSqFtTile        = 5.00f;
+    public float costPerSqFtHardwood    = 8.00f;
+    public float costPerSqFtLaminate    = 4.00f;
+    /** Waste factor as a decimal (0.10 = 10%). Applied to all types. */
     public float wasteFactor = 0.10f;
     public float laborPerSqFt = 3.00f;
     public boolean isDIY = false;
+
+    public float getCostForType(com.eteks.sweethome3d.model.FlooringType type) {
+      switch (type) {
+        case CARPET:   return costPerSqFtCarpet;
+        case TILE:     return costPerSqFtTile;
+        case HARDWOOD: return costPerSqFtHardwood;
+        case LAMINATE: return costPerSqFtLaminate;
+        default:       return costPerSqFtUnspecified;
+      }
+    }
   }
 
   public static class ElectricalSettings implements Serializable {

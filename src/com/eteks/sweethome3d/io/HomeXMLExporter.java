@@ -655,6 +655,9 @@ public class HomeXMLExporter extends ObjectXMLExporter<Home> {
           writer.writeBooleanAttribute("floorVisible", room.isFloorVisible(), true);
           writer.writeColorAttribute("floorColor", room.getFloorColor());
           writer.writeFloatAttribute("floorShininess", room.getFloorShininess(), 0);
+          if (room.getFlooringType() != com.eteks.sweethome3d.model.FlooringType.UNSPECIFIED) {
+            writer.writeAttribute("flooringType", room.getFlooringType().name());
+          }
           writer.writeBooleanAttribute("ceilingVisible", room.isCeilingVisible(), true);
           writer.writeColorAttribute("ceilingColor", room.getCeilingColor());
           writer.writeFloatAttribute("ceilingShininess", room.getCeilingShininess(), 0);
