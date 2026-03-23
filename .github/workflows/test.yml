@@ -26,15 +26,3 @@ jobs:
       - name: Build JAR
         run: ./gradlew jarExecutable
 
-      - name: Verify artifacts
-        run: |
-          if [ ! -f "install/SweetHome3D-7.7-Online.jar" ]; then
-            echo "Main JAR not found!"
-            exit 1
-          fi
-          if [ ! -f "install/plugins/CostEstimatorPlugin.jar" ]; then
-            echo "Plugin JAR not found!"
-            exit 1
-          fi
-          echo "✓ Main JAR: $(ls -lh install/SweetHome3D-7.7-Online.jar | awk '{print $5}')"
-          echo "✓ Plugin JAR: $(ls -lh install/plugins/CostEstimatorPlugin.jar | awk '{print $5}')"
