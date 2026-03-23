@@ -17,10 +17,11 @@ import java.util.logging.Logger;
 import com.eteks.sweethome3d.model.Home;
 
 /**
- * Calculates paint material and labor line items.
+ * Calculates paint material and labor line items for walls and ceilings.
  *
- * Gallons = ceil(finishedWallArea / coveragePerGallon)
- * Same surface area as drywall (10% reduction for openings applied).
+ * Walls:   primer + finish coats from finishedWallArea
+ * Ceiling: finish coats only (no primer — ceilings typically get one coat of flat white)
+ *          from ceilingArea (rooms with isCeilingVisible() == true)
  */
 public class PaintCalculator implements StageCalculator {
   private static final Logger LOG = Logger.getLogger(PaintCalculator.class.getName());
@@ -33,28 +34,44 @@ public class PaintCalculator implements StageCalculator {
   @Override
   public List<MaterialLineItem> calculate(Home home, BOMSettings settings) {
     BOMSettings.PaintSettings ps = settings.getPaint();
-    float sqFt = WallUtils.finishedWallAreaSqFt(home);
+    float wallSqFt    = WallUtils.finishedWallAreaSqFt(home);
+    float ceilingSqFt = WallUtils.ceilingAreaSqFt(home);
 
-    int primerGal = (int) Math.ceil(sqFt / ps.coverageSqFtPerGallon);
-    int finishGal = primerGal * ps.finishCoats;
+    int wallPrimerGal  = (int) Math.ceil(wallSqFt    / ps.coverageSqFtPerGallon);
+    int wallFinishGal  = wallPrimerGal * ps.finishCoats;
+    int ceilFinishGal  = (int) Math.ceil(ceilingSqFt / ps.coverageSqFtPerGallon) * ps.finishCoats;
 
-    LOG.info("[PaintCalculator] area=" + String.format("%.1f", sqFt)
-        + " sqft, primer=" + primerGal + " gal"
-        + ", finish=" + finishGal + " gal (" + ps.finishCoats + " coat(s))"
+    LOG.info("[PaintCalculator] walls=" + String.format("%.1f", wallSqFt)
+        + " sqft (primer=" + wallPrimerGal + " gal, finish=" + wallFinishGal + " gal)"
+        + ", ceiling=" + String.format("%.1f", ceilingSqFt)
+        + " sqft (finish=" + ceilFinishGal + " gal)"
         + ", isDIY=" + ps.isDIY);
 
     List<MaterialLineItem> items = new ArrayList<>();
 
-    if (primerGal > 0) {
-      items.add(new MaterialLineItem("Primer", primerGal, "gallon", ps.costPerGallonPrimer));
+    // Walls — primer + finish
+    if (wallPrimerGal > 0) {
+      items.add(new MaterialLineItem("Primer — walls", wallPrimerGal, "gallon",
+          ps.costPerGallonPrimer));
     }
-    if (finishGal > 0) {
+    if (wallFinishGal > 0) {
       items.add(new MaterialLineItem(
-          "Finish coat (" + ps.finishCoats + "×)", finishGal, "gallon", ps.costPerGallonFinish));
+          "Finish coat — walls (" + ps.finishCoats + "×)", wallFinishGal, "gallon",
+          ps.costPerGallonFinish));
+    }
+    if (!ps.isDIY && wallSqFt > 0) {
+      items.add(new MaterialLineItem("Labor — paint walls", wallSqFt, "sq ft",
+          ps.laborPerSqFt, true));
     }
 
-    if (!ps.isDIY && sqFt > 0) {
-      items.add(new MaterialLineItem("Labor - painting", sqFt, "sq ft",
+    // Ceiling — finish only (no primer; one coat of flat white is standard)
+    if (ceilFinishGal > 0) {
+      items.add(new MaterialLineItem(
+          "Ceiling paint (" + ps.finishCoats + "×)", ceilFinishGal, "gallon",
+          ps.costPerGallonFinish));
+    }
+    if (!ps.isDIY && ceilingSqFt > 0) {
+      items.add(new MaterialLineItem("Labor — paint ceiling", ceilingSqFt, "sq ft",
           ps.laborPerSqFt, true));
     }
 

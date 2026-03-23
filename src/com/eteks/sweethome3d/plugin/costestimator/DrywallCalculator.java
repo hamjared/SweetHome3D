@@ -17,10 +17,11 @@ import java.util.logging.Logger;
 import com.eteks.sweethome3d.model.Home;
 
 /**
- * Calculates drywall material and labor line items.
+ * Calculates drywall material and labor line items for walls and ceilings.
  *
- * Sheet count = ceil(finishedWallArea × (1 + wasteFactor) / 32)
- * Opening area is approximated as a flat 10% reduction.
+ * Wall sheets  = ceil(finishedWallArea × (1 + wasteFactor) / 32)
+ * Ceiling sheets = ceil(ceilingArea × (1 + wasteFactor) / 32)
+ * Ceiling area equals floor area for rooms with isCeilingVisible() == true.
  */
 public class DrywallCalculator implements StageCalculator {
   private static final Logger LOG = Logger.getLogger(DrywallCalculator.class.getName());
@@ -34,21 +35,38 @@ public class DrywallCalculator implements StageCalculator {
   @Override
   public List<MaterialLineItem> calculate(Home home, BOMSettings settings) {
     BOMSettings.DrywallSettings ds = settings.getDrywall();
-    float rawSqFt = WallUtils.finishedWallAreaSqFt(home);
-    int sheets = (int) Math.ceil(rawSqFt * (1f + ds.wasteFactor) / SHEET_SQ_FT);
+    float wallSqFt    = WallUtils.finishedWallAreaSqFt(home);
+    float ceilingSqFt = WallUtils.ceilingAreaSqFt(home);
+    int wallSheets    = (int) Math.ceil(wallSqFt    * (1f + ds.wasteFactor) / SHEET_SQ_FT);
+    int ceilingSheets = (int) Math.ceil(ceilingSqFt * (1f + ds.wasteFactor) / SHEET_SQ_FT);
 
-    LOG.info("[DrywallCalculator] rawArea=" + String.format("%.1f", rawSqFt)
-        + " sqft, waste=" + (int)(ds.wasteFactor * 100) + "%, sheets=" + sheets
+    LOG.info("[DrywallCalculator] walls=" + String.format("%.1f", wallSqFt)
+        + " sqft (" + wallSheets + " sheets)"
+        + ", ceiling=" + String.format("%.1f", ceilingSqFt)
+        + " sqft (" + ceilingSheets + " sheets)"
+        + ", waste=" + (int)(ds.wasteFactor * 100) + "%"
         + ", isDIY=" + ds.isDIY);
 
     List<MaterialLineItem> items = new ArrayList<>();
-    if (sheets > 0) {
-      items.add(new MaterialLineItem("Drywall sheet (4×8)", sheets, "sheet", ds.costPerSheet));
+
+    if (wallSheets > 0) {
+      items.add(new MaterialLineItem("Drywall sheet (4×8) — walls", wallSheets, "sheet",
+          ds.costPerSheet));
       if (!ds.isDIY) {
-        items.add(new MaterialLineItem("Labor - hang drywall", sheets, "sheet",
+        items.add(new MaterialLineItem("Labor — hang wall drywall", wallSheets, "sheet",
             ds.laborPerSheet, true));
       }
     }
+
+    if (ceilingSheets > 0) {
+      items.add(new MaterialLineItem("Drywall sheet (4×8) — ceiling", ceilingSheets, "sheet",
+          ds.costPerSheet));
+      if (!ds.isDIY) {
+        items.add(new MaterialLineItem("Labor — hang ceiling drywall", ceilingSheets, "sheet",
+            ds.laborPerSheet, true));
+      }
+    }
+
     return items;
   }
 }
