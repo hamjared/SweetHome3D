@@ -12,6 +12,10 @@ java {
     }
 }
 
+tasks.withType<JavaCompile> {
+    options.compilerArgs.addAll(listOf("-Xlint:none", "-nowarn"))
+}
+
 repositories {
     mavenCentral()
     // Java 3D from JogAmp - use correct URLs
@@ -307,6 +311,8 @@ tasks.register<Jar>("jarExecutableWithPlugin") {
         into("lib/yafaray/macosx")
         include("*.jnilib", "*.dylib")
     }
+
+    dependsOn("costEstimatorPlugin")
 
     doLast {
         val installDir = file("install")
