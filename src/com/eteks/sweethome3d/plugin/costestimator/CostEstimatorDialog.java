@@ -1,5 +1,5 @@
 /*
- * CostEstimatorDialog.java - Cost estimator main dialog
+ * CostEstimatorDialog.java - BOM + Cost estimator main dialog
  *
  * Sweet Home 3D, Copyright (c) 2024 Space Mushrooms <info@sweethome3d.com>
  *
@@ -11,135 +11,273 @@
 package com.eteks.sweethome3d.plugin.costestimator;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Frame;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
+import java.awt.Font;
+import java.text.DecimalFormat;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
 
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTable;
+import javax.swing.SwingUtilities;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
 
 import com.eteks.sweethome3d.model.Home;
-import com.eteks.sweethome3d.model.Room;
 import com.eteks.sweethome3d.model.UserPreferences;
 
 /**
- * Dialog for viewing and configuring cost estimates.
+ * Main BOM + cost estimator dialog.
+ * Shows one tab per construction stage with material quantities and costs,
+ * plus a Summary tab with stage-level totals.
  */
 public class CostEstimatorDialog extends JDialog {
   private static final long serialVersionUID = 1L;
-  private static final String RATES_PREFERENCE_KEY = "costEstimator.rates";
-  private static final String WET_ROOMS_PREFERENCE_KEY = "costEstimator.wetRooms";
+  private static final Logger LOG = Logger.getLogger(CostEstimatorDialog.class.getName());
+  private static final DecimalFormat CURRENCY = new DecimalFormat("$#,##0.00");
 
-  private Home home;
-  private UserPreferences preferences;
-  private CostRates rates;
-  private List<Integer> wetRoomIndices;
-  private CostEstimatorPanel estimatorPanel;
+  private final Home home;
+  private final UserPreferences preferences;
+  private BOMSettings settings;
+  private BOMReport report;
 
-  public CostEstimatorDialog(Frame owner, Home home, UserPreferences preferences) {
-    super(owner, "Cost Estimator", true);
-    this.home = home;
+  // One panel per stage, keyed by stage
+  private final Map<BOMReport.Stage, CostEstimatorPanel> stagePanels = new EnumMap<>(BOMReport.Stage.class);
+  private SummaryTableModel summaryModel;
+
+  public CostEstimatorDialog(java.awt.Frame owner, Home home, UserPreferences preferences) {
+    super(owner, "BOM & Cost Estimator", true);
+    this.home        = home;
     this.preferences = preferences;
 
-    loadRates();
-    loadWetRoomIndices();
+    LOG.info("[CostEstimatorDialog] Initializing dialog");
 
-    CostReport report = CostCalculator.calculate(home, rates, wetRoomIndices);
-    estimatorPanel = new CostEstimatorPanel(report);
+    loadSettings();
+    report = BOMCalculator.calculate(home, settings);
 
-    // Note: To listen for home changes, you would need to add listeners to walls,
-    // rooms, and furniture collections. For now, estimates are static until dialog is reopened.
+    LOG.info("[CostEstimatorDialog] Initial report grand total: "
+        + CURRENCY.format(report.getGrandTotal()));
 
-    // Main layout
-    setLayout(new BorderLayout(5, 5));
-    add(estimatorPanel, BorderLayout.CENTER);
-
-    // Button panel
-    JPanel buttonPanel = new JPanel();
-    buttonPanel.add(Box.createHorizontalGlue());
-
-    JButton editRatesButton = new JButton("Edit Rates...");
-    editRatesButton.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        showEditRatesDialog();
-      }
-    });
-    buttonPanel.add(editRatesButton);
-
-    JButton exportButton = new JButton("Export to PDF");
-    exportButton.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        exportToPDF();
-      }
-    });
-    buttonPanel.add(exportButton);
-
-    JButton closeButton = new JButton("Close");
-    closeButton.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        dispose();
-      }
-    });
-    buttonPanel.add(closeButton);
-
-    add(buttonPanel, BorderLayout.SOUTH);
-
-    setSize(600, 450);
+    buildUI();
+    setSize(680, 520);
     setLocationRelativeTo(owner);
   }
 
-  private void loadRates() {
-    this.rates = new CostRates();
-    // TODO: Load from preferences if saved
+  // ---------------------------------------------------------------------------
+  // UI construction
+  // ---------------------------------------------------------------------------
+
+  private void buildUI() {
+    setLayout(new BorderLayout(5, 5));
+
+    JTabbedPane tabs = new JTabbedPane();
+
+    // One tab per stage
+    for (BOMReport.Stage stage : BOMReport.Stage.values()) {
+      List<MaterialLineItem> items = report.getItems(stage);
+      boolean isDIY = stageIsDIY(stage);
+      CostEstimatorPanel panel = new CostEstimatorPanel(items, isDIY);
+
+      panel.addDIYChangeListener(e -> {
+        boolean diy = panel.isDIY();
+        LOG.info("[CostEstimatorDialog] DIY toggled for " + stage.getDisplayName() + " → " + diy);
+        setStageDIY(stage, diy);
+        refreshAll();
+      });
+
+      stagePanels.put(stage, panel);
+      tabs.addTab(stage.getDisplayName(), panel);
+    }
+
+    // Summary tab
+    tabs.addTab("Summary", buildSummaryTab());
+
+    add(tabs, BorderLayout.CENTER);
+
+    // Button row
+    JPanel buttons = new JPanel();
+    buttons.add(Box.createHorizontalGlue());
+
+    JButton settingsBtn = new JButton("Settings...");
+    settingsBtn.addActionListener(e -> showSettingsDialog());
+    buttons.add(settingsBtn);
+
+    JButton closeBtn = new JButton("Close");
+    closeBtn.addActionListener(e -> dispose());
+    buttons.add(closeBtn);
+
+    add(buttons, BorderLayout.SOUTH);
   }
 
-  private void loadWetRoomIndices() {
-    this.wetRoomIndices = new ArrayList<>();
-    // TODO: Load from preferences if saved
+  private JPanel buildSummaryTab() {
+    summaryModel = new SummaryTableModel(report);
+    JTable table = new JTable(summaryModel);
+    table.setRowHeight(22);
+    table.setShowGrid(true);
+    table.setGridColor(Color.LIGHT_GRAY);
+    table.getColumnModel().getColumn(0).setPreferredWidth(120);
+    table.getColumnModel().getColumn(1).setPreferredWidth(110);
+    table.getColumnModel().getColumn(2).setPreferredWidth(110);
+    table.getColumnModel().getColumn(3).setPreferredWidth(110);
+
+    DefaultTableCellRenderer right = new DefaultTableCellRenderer();
+    right.setHorizontalAlignment(JLabel.RIGHT);
+    for (int c = 1; c <= 3; c++) {
+      table.getColumnModel().getColumn(c).setCellRenderer(right);
+    }
+
+    JScrollPane scroll = new JScrollPane(table);
+    scroll.setPreferredSize(new Dimension(460, 220));
+
+    JLabel grandLabel = new JLabel();
+    grandLabel.setFont(grandLabel.getFont().deriveFont(Font.BOLD, 14f));
+    updateGrandLabel(grandLabel);
+
+    // Store reference so refreshAll can update it
+    this.grandTotalLabel = grandLabel;
+
+    JPanel totalsRow = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT, 12, 4));
+    totalsRow.add(new JLabel("Grand Total:"));
+    totalsRow.add(grandLabel);
+
+    JPanel panel = new JPanel(new BorderLayout(5, 5));
+    panel.add(scroll,     BorderLayout.CENTER);
+    panel.add(totalsRow,  BorderLayout.SOUTH);
+    return panel;
   }
 
-  private void saveRates() {
-    // TODO: Save to preferences
+  private JLabel grandTotalLabel;
+
+  private void updateGrandLabel(JLabel label) {
+    label.setText(CURRENCY.format(report.getGrandTotal()));
   }
 
-  private void saveWetRoomIndices() {
-    // TODO: Save to preferences
+  // ---------------------------------------------------------------------------
+  // Refresh
+  // ---------------------------------------------------------------------------
+
+  /** Recalculate the BOM from current settings and update all panels. */
+  private void refreshAll() {
+    LOG.info("[CostEstimatorDialog] Refreshing BOM report");
+    report = BOMCalculator.calculate(home, settings);
+
+    for (BOMReport.Stage stage : BOMReport.Stage.values()) {
+      CostEstimatorPanel panel = stagePanels.get(stage);
+      if (panel != null) {
+        panel.setItems(report.getItems(stage));
+      }
+    }
+
+    if (summaryModel != null) {
+      summaryModel.setReport(report);
+    }
+    if (grandTotalLabel != null) {
+      updateGrandLabel(grandTotalLabel);
+    }
+
+    LOG.info("[CostEstimatorDialog] Refresh complete, grand total: "
+        + CURRENCY.format(report.getGrandTotal()));
   }
 
-  private void refreshEstimate() {
-    CostReport report = CostCalculator.calculate(home, rates, wetRoomIndices);
-    estimatorPanel.updateReport(report);
-  }
+  // ---------------------------------------------------------------------------
+  // Settings dialog
+  // ---------------------------------------------------------------------------
 
-  private void showEditRatesDialog() {
-    CostRatesDialog dialog = new CostRatesDialog(this, rates, home.getRooms());
+  private void showSettingsDialog() {
+    LOG.info("[CostEstimatorDialog] Opening settings dialog");
+    BOMSettingsDialog dialog = new BOMSettingsDialog(this, settings, home.getRooms());
     dialog.setVisible(true);
 
     if (dialog.wasOkClicked()) {
-      CostRates newRates = dialog.getRates();
-      List<Integer> newWetRooms = dialog.getWetRoomIndices();
-
-      this.rates = newRates;
-      this.wetRoomIndices = newWetRooms;
-      saveRates();
-      saveWetRoomIndices();
-      refreshEstimate();
+      LOG.info("[CostEstimatorDialog] Settings updated, refreshing");
+      // Sync DIY toggle UI to match updated settings
+      for (BOMReport.Stage stage : BOMReport.Stage.values()) {
+        // (Panel DIY radio reflects settings; we just need to refresh data)
+      }
+      refreshAll();
     }
   }
 
-  private void exportToPDF() {
-    // TODO: Implement PDF export
-    // Could use iText (already available) or Apache PDFBox
-    javax.swing.JOptionPane.showMessageDialog(this,
-        "PDF export not yet implemented. Coming soon!",
-        "PDF Export", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+  // ---------------------------------------------------------------------------
+  // Settings persistence (stubs — TODO: use UserPreferences)
+  // ---------------------------------------------------------------------------
+
+  private void loadSettings() {
+    this.settings = new BOMSettings();
+    LOG.info("[CostEstimatorDialog] Loaded default BOM settings");
+  }
+
+  // ---------------------------------------------------------------------------
+  // DIY flag helpers
+  // ---------------------------------------------------------------------------
+
+  private boolean stageIsDIY(BOMReport.Stage stage) {
+    switch (stage) {
+      case FRAMING:    return settings.getFraming().isDIY;
+      case DRYWALL:    return settings.getDrywall().isDIY;
+      case PAINT:      return settings.getPaint().isDIY;
+      case ELECTRICAL: return settings.getElectrical().isDIY;
+      case PLUMBING:   return settings.getPlumbing().isDIY;
+      case FLOORING:   return settings.getFlooring().isDIY;
+      default:         return false;
+    }
+  }
+
+  private void setStageDIY(BOMReport.Stage stage, boolean diy) {
+    switch (stage) {
+      case FRAMING:    settings.getFraming().isDIY    = diy; break;
+      case DRYWALL:    settings.getDrywall().isDIY    = diy; break;
+      case PAINT:      settings.getPaint().isDIY      = diy; break;
+      case ELECTRICAL: settings.getElectrical().isDIY = diy; break;
+      case PLUMBING:   settings.getPlumbing().isDIY   = diy; break;
+      case FLOORING:   settings.getFlooring().isDIY   = diy; break;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Summary table model
+  // ---------------------------------------------------------------------------
+
+  private static class SummaryTableModel extends AbstractTableModel {
+    private static final long serialVersionUID = 1L;
+    private static final String[] COLUMNS = { "Stage", "Materials", "Labor", "Total" };
+
+    private BOMReport report;
+
+    SummaryTableModel(BOMReport report) {
+      this.report = report;
+    }
+
+    void setReport(BOMReport report) {
+      this.report = report;
+      fireTableDataChanged();
+    }
+
+    @Override public int getRowCount()    { return BOMReport.Stage.values().length; }
+    @Override public int getColumnCount() { return COLUMNS.length; }
+    @Override public String getColumnName(int col) { return COLUMNS[col]; }
+    @Override public Class<?> getColumnClass(int col) { return String.class; }
+    @Override public boolean isCellEditable(int row, int col) { return false; }
+
+    @Override
+    public Object getValueAt(int row, int col) {
+      BOMReport.Stage stage = BOMReport.Stage.values()[row];
+      switch (col) {
+        case 0: return stage.getDisplayName();
+        case 1: return CURRENCY.format(report.getStageMaterialTotal(stage));
+        case 2: return CURRENCY.format(report.getStageLaborTotal(stage));
+        case 3: return CURRENCY.format(report.getStageTotal(stage));
+        default: return "";
+      }
+    }
   }
 }
