@@ -14,6 +14,10 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.util.Properties;
 import java.text.DecimalFormat;
 import java.util.EnumMap;
 import java.util.List;
@@ -91,6 +95,7 @@ public class CostEstimatorDialog extends JDialog {
         boolean diy = panel.isDIY();
         LOG.info("[CostEstimatorDialog] DIY toggled for " + stage.getDisplayName() + " → " + diy);
         setStageDIY(stage, diy);
+        saveSettings();
         refreshAll();
       });
 
@@ -199,21 +204,43 @@ public class CostEstimatorDialog extends JDialog {
 
     if (dialog.wasOkClicked()) {
       LOG.info("[CostEstimatorDialog] Settings updated, refreshing");
-      // Sync DIY toggle UI to match updated settings
-      for (BOMReport.Stage stage : BOMReport.Stage.values()) {
-        // (Panel DIY radio reflects settings; we just need to refresh data)
-      }
+      saveSettings();
       refreshAll();
     }
   }
 
   // ---------------------------------------------------------------------------
-  // Settings persistence (stubs — TODO: use UserPreferences)
+  // Settings persistence (stored in Home properties, saved with the .sh3d file)
   // ---------------------------------------------------------------------------
 
+  private static final String SETTINGS_PROPERTY = "CostEstimator.settings";
+
   private void loadSettings() {
+    String stored = home.getProperty(SETTINGS_PROPERTY);
+    if (stored != null) {
+      try {
+        Properties p = new Properties();
+        p.load(new StringReader(stored));
+        this.settings = BOMSettings.fromProperties(p);
+        LOG.info("[CostEstimatorDialog] Loaded BOM settings from home properties");
+        return;
+      } catch (IOException e) {
+        LOG.warning("[CostEstimatorDialog] Failed to load settings, using defaults: " + e.getMessage());
+      }
+    }
     this.settings = new BOMSettings();
     LOG.info("[CostEstimatorDialog] Loaded default BOM settings");
+  }
+
+  private void saveSettings() {
+    try {
+      StringWriter sw = new StringWriter();
+      settings.toProperties().store(sw, null);
+      home.setProperty(SETTINGS_PROPERTY, sw.toString());
+      LOG.info("[CostEstimatorDialog] Saved BOM settings to home properties");
+    } catch (IOException e) {
+      LOG.warning("[CostEstimatorDialog] Failed to save settings: " + e.getMessage());
+    }
   }
 
   // ---------------------------------------------------------------------------

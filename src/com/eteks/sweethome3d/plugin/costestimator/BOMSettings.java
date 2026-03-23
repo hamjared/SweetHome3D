@@ -13,6 +13,7 @@ package com.eteks.sweethome3d.plugin.costestimator;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * All settings for BOM estimation: global (lumber size, stud spacing) and
@@ -78,6 +79,150 @@ public class BOMSettings implements Serializable {
 
   public List<Integer> getWetRoomIndices() { return wetRoomIndices; }
   public void setWetRoomIndices(List<Integer> v) { this.wetRoomIndices = new ArrayList<>(v); }
+
+  // -------------------------------------------------------------------------
+  // Properties-based serialization (resilient to field additions/removals)
+  // -------------------------------------------------------------------------
+
+  public Properties toProperties() {
+    Properties p = new Properties();
+    // Global
+    p.setProperty("lumberSize",        lumberSize.name());
+    p.setProperty("studSpacingInches", String.valueOf(studSpacingInches));
+    p.setProperty("allWallsFloating",  String.valueOf(allWallsFloating));
+    p.setProperty("wallsInsulated",    String.valueOf(wallsInsulated));
+    // Framing
+    p.setProperty("framing.isDIY",              String.valueOf(framing.isDIY));
+    p.setProperty("framing.costPerBoard2x4",    String.valueOf(framing.costPerBoard2x4));
+    p.setProperty("framing.costPerBoard2x6",    String.valueOf(framing.costPerBoard2x6));
+    p.setProperty("framing.costPerPTBoard2x4",  String.valueOf(framing.costPerPTBoard2x4));
+    p.setProperty("framing.costPerPTBoard2x6",  String.valueOf(framing.costPerPTBoard2x6));
+    p.setProperty("framing.laborPerStud",       String.valueOf(framing.laborPerStud));
+    p.setProperty("framing.laborPerLinFtPlate", String.valueOf(framing.laborPerLinFtPlate));
+    // Insulation
+    p.setProperty("insulation.isDIY",             String.valueOf(insulation.isDIY));
+    p.setProperty("insulation.costPerSqFtWall",   String.valueOf(insulation.costPerSqFtWall));
+    p.setProperty("insulation.costPerSqFtCeiling",String.valueOf(insulation.costPerSqFtCeiling));
+    p.setProperty("insulation.laborPerSqFtWall",  String.valueOf(insulation.laborPerSqFtWall));
+    p.setProperty("insulation.laborPerSqFtCeiling",String.valueOf(insulation.laborPerSqFtCeiling));
+    // Drywall
+    p.setProperty("drywall.isDIY",         String.valueOf(drywall.isDIY));
+    p.setProperty("drywall.costPerSheet",  String.valueOf(drywall.costPerSheet));
+    p.setProperty("drywall.wasteFactor",   String.valueOf(drywall.wasteFactor));
+    p.setProperty("drywall.laborPerSheet", String.valueOf(drywall.laborPerSheet));
+    // Paint
+    p.setProperty("paint.isDIY",                 String.valueOf(paint.isDIY));
+    p.setProperty("paint.costPerGallonPrimer",   String.valueOf(paint.costPerGallonPrimer));
+    p.setProperty("paint.costPerGallonFinish",   String.valueOf(paint.costPerGallonFinish));
+    p.setProperty("paint.coverageSqFtPerGallon", String.valueOf(paint.coverageSqFtPerGallon));
+    p.setProperty("paint.finishCoats",           String.valueOf(paint.finishCoats));
+    p.setProperty("paint.laborPerSqFt",          String.valueOf(paint.laborPerSqFt));
+    // Flooring
+    p.setProperty("flooring.isDIY",        String.valueOf(flooring.isDIY));
+    p.setProperty("flooring.costPerSqFt",  String.valueOf(flooring.costPerSqFt));
+    p.setProperty("flooring.wasteFactor",  String.valueOf(flooring.wasteFactor));
+    p.setProperty("flooring.laborPerSqFt", String.valueOf(flooring.laborPerSqFt));
+    // Electrical
+    p.setProperty("electrical.isDIY",            String.valueOf(electrical.isDIY));
+    p.setProperty("electrical.costPerRoomBase",  String.valueOf(electrical.costPerRoomBase));
+    p.setProperty("electrical.costPerFixture",   String.valueOf(electrical.costPerFixture));
+    p.setProperty("electrical.laborPerRoom",     String.valueOf(electrical.laborPerRoom));
+    p.setProperty("electrical.laborPerFixture",  String.valueOf(electrical.laborPerFixture));
+    // Plumbing
+    p.setProperty("plumbing.isDIY",                String.valueOf(plumbing.isDIY));
+    p.setProperty("plumbing.costPerStandardRoom",  String.valueOf(plumbing.costPerStandardRoom));
+    p.setProperty("plumbing.costPerWetRoom",       String.valueOf(plumbing.costPerWetRoom));
+    p.setProperty("plumbing.laborPerStandardRoom", String.valueOf(plumbing.laborPerStandardRoom));
+    p.setProperty("plumbing.laborPerWetRoom",      String.valueOf(plumbing.laborPerWetRoom));
+    // Wet rooms
+    StringBuilder wetRooms = new StringBuilder();
+    for (int i = 0; i < wetRoomIndices.size(); i++) {
+      if (i > 0) wetRooms.append(',');
+      wetRooms.append(wetRoomIndices.get(i));
+    }
+    p.setProperty("wetRoomIndices", wetRooms.toString());
+    return p;
+  }
+
+  public static BOMSettings fromProperties(Properties p) {
+    BOMSettings s = new BOMSettings();
+    // Global
+    String lumberSizeVal = p.getProperty("lumberSize");
+    if (lumberSizeVal != null) {
+      try { s.lumberSize = LumberSize.valueOf(lumberSizeVal); } catch (IllegalArgumentException ignored) {}
+    }
+    s.studSpacingInches = parseInt(p, "studSpacingInches", s.studSpacingInches);
+    s.allWallsFloating  = parseBool(p, "allWallsFloating",  s.allWallsFloating);
+    s.wallsInsulated    = parseBool(p, "wallsInsulated",    s.wallsInsulated);
+    // Framing
+    s.framing.isDIY              = parseBool(p,  "framing.isDIY",              s.framing.isDIY);
+    s.framing.costPerBoard2x4    = parseFloat(p, "framing.costPerBoard2x4",    s.framing.costPerBoard2x4);
+    s.framing.costPerBoard2x6    = parseFloat(p, "framing.costPerBoard2x6",    s.framing.costPerBoard2x6);
+    s.framing.costPerPTBoard2x4  = parseFloat(p, "framing.costPerPTBoard2x4",  s.framing.costPerPTBoard2x4);
+    s.framing.costPerPTBoard2x6  = parseFloat(p, "framing.costPerPTBoard2x6",  s.framing.costPerPTBoard2x6);
+    s.framing.laborPerStud       = parseFloat(p, "framing.laborPerStud",       s.framing.laborPerStud);
+    s.framing.laborPerLinFtPlate = parseFloat(p, "framing.laborPerLinFtPlate", s.framing.laborPerLinFtPlate);
+    // Insulation
+    s.insulation.isDIY              = parseBool(p,  "insulation.isDIY",              s.insulation.isDIY);
+    s.insulation.costPerSqFtWall    = parseFloat(p, "insulation.costPerSqFtWall",    s.insulation.costPerSqFtWall);
+    s.insulation.costPerSqFtCeiling = parseFloat(p, "insulation.costPerSqFtCeiling", s.insulation.costPerSqFtCeiling);
+    s.insulation.laborPerSqFtWall   = parseFloat(p, "insulation.laborPerSqFtWall",   s.insulation.laborPerSqFtWall);
+    s.insulation.laborPerSqFtCeiling= parseFloat(p, "insulation.laborPerSqFtCeiling",s.insulation.laborPerSqFtCeiling);
+    // Drywall
+    s.drywall.isDIY        = parseBool(p,  "drywall.isDIY",        s.drywall.isDIY);
+    s.drywall.costPerSheet = parseFloat(p, "drywall.costPerSheet", s.drywall.costPerSheet);
+    s.drywall.wasteFactor  = parseFloat(p, "drywall.wasteFactor",  s.drywall.wasteFactor);
+    s.drywall.laborPerSheet= parseFloat(p, "drywall.laborPerSheet",s.drywall.laborPerSheet);
+    // Paint
+    s.paint.isDIY                = parseBool(p,  "paint.isDIY",                s.paint.isDIY);
+    s.paint.costPerGallonPrimer  = parseFloat(p, "paint.costPerGallonPrimer",  s.paint.costPerGallonPrimer);
+    s.paint.costPerGallonFinish  = parseFloat(p, "paint.costPerGallonFinish",  s.paint.costPerGallonFinish);
+    s.paint.coverageSqFtPerGallon= parseInt(p,   "paint.coverageSqFtPerGallon",s.paint.coverageSqFtPerGallon);
+    s.paint.finishCoats          = parseInt(p,   "paint.finishCoats",          s.paint.finishCoats);
+    s.paint.laborPerSqFt         = parseFloat(p, "paint.laborPerSqFt",         s.paint.laborPerSqFt);
+    // Flooring
+    s.flooring.isDIY        = parseBool(p,  "flooring.isDIY",        s.flooring.isDIY);
+    s.flooring.costPerSqFt  = parseFloat(p, "flooring.costPerSqFt",  s.flooring.costPerSqFt);
+    s.flooring.wasteFactor  = parseFloat(p, "flooring.wasteFactor",  s.flooring.wasteFactor);
+    s.flooring.laborPerSqFt = parseFloat(p, "flooring.laborPerSqFt", s.flooring.laborPerSqFt);
+    // Electrical
+    s.electrical.isDIY           = parseBool(p,  "electrical.isDIY",           s.electrical.isDIY);
+    s.electrical.costPerRoomBase = parseFloat(p, "electrical.costPerRoomBase", s.electrical.costPerRoomBase);
+    s.electrical.costPerFixture  = parseFloat(p, "electrical.costPerFixture",  s.electrical.costPerFixture);
+    s.electrical.laborPerRoom    = parseFloat(p, "electrical.laborPerRoom",    s.electrical.laborPerRoom);
+    s.electrical.laborPerFixture = parseFloat(p, "electrical.laborPerFixture", s.electrical.laborPerFixture);
+    // Plumbing
+    s.plumbing.isDIY                = parseBool(p,  "plumbing.isDIY",                s.plumbing.isDIY);
+    s.plumbing.costPerStandardRoom  = parseFloat(p, "plumbing.costPerStandardRoom",  s.plumbing.costPerStandardRoom);
+    s.plumbing.costPerWetRoom       = parseFloat(p, "plumbing.costPerWetRoom",       s.plumbing.costPerWetRoom);
+    s.plumbing.laborPerStandardRoom = parseFloat(p, "plumbing.laborPerStandardRoom", s.plumbing.laborPerStandardRoom);
+    s.plumbing.laborPerWetRoom      = parseFloat(p, "plumbing.laborPerWetRoom",      s.plumbing.laborPerWetRoom);
+    // Wet rooms
+    String wetVal = p.getProperty("wetRoomIndices", "").trim();
+    if (!wetVal.isEmpty()) {
+      for (String part : wetVal.split(",")) {
+        try { s.wetRoomIndices.add(Integer.parseInt(part.trim())); } catch (NumberFormatException ignored) {}
+      }
+    }
+    return s;
+  }
+
+  private static boolean parseBool(Properties p, String key, boolean defaultVal) {
+    String v = p.getProperty(key);
+    return v != null ? Boolean.parseBoolean(v) : defaultVal;
+  }
+
+  private static float parseFloat(Properties p, String key, float defaultVal) {
+    String v = p.getProperty(key);
+    if (v == null) return defaultVal;
+    try { return Float.parseFloat(v); } catch (NumberFormatException e) { return defaultVal; }
+  }
+
+  private static int parseInt(Properties p, String key, int defaultVal) {
+    String v = p.getProperty(key);
+    if (v == null) return defaultVal;
+    try { return Integer.parseInt(v); } catch (NumberFormatException e) { return defaultVal; }
+  }
 
   // -------------------------------------------------------------------------
   // Per-stage settings classes
