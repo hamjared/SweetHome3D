@@ -2,3 +2,9 @@
 build/
 *.log
 test-plugin.sh
+install/SweetHome3D-8.0.jar
+install/plugins/CostEstimatorPlugin.jar
+plans/bom-tool.md
+CrestoneBasementFloorplan - ALternate2.sh3d
+.claude/skills/sweethome/SKILL.md
+.claude/settings.local.json
