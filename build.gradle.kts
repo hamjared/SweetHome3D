@@ -145,38 +145,58 @@ tasks.register<Jar>("jarExecutable") {
 
     // Include native libraries
     from("lib/java3d-1.6/linux/amd64") {
-        into("lib/java3d-1.6/linux/amd64")
+        into("java3d-1.6/linux/amd64")
         include("*.so")
     }
     from("lib/java3d-1.6/linux/i586") {
-        into("lib/java3d-1.6/linux/i586")
+        into("java3d-1.6/linux/i586")
         include("*.so")
     }
     from("lib/java3d-1.6/windows/x64") {
-        into("lib/java3d-1.6/windows/x64")
+        into("java3d-1.6/windows/x64")
         include("*.dll")
     }
     from("lib/java3d-1.6/windows/i386") {
-        into("lib/java3d-1.6/windows/i386")
+        into("java3d-1.6/windows/i386")
         include("*.dll")
     }
     from("lib/java3d-1.6/macosx") {
-        into("lib/java3d-1.6/macosx")
+        into("java3d-1.6/macosx")
         include("*.jnilib", "*.dylib")
     }
 
     // Include YafaRay native libraries
     from("lib/yafaray/linux/x64") {
-        into("lib/yafaray/linux/x64")
+        into("yafaray/linux/x64")
+        include("*.so")
+    }
+    from("lib/yafaray/linux/x64/yafaray-plugins") {
+        into("yafaray/linux/x64/yafaray-plugins")
         include("*.so")
     }
     from("lib/yafaray/windows/x64") {
-        into("lib/yafaray/windows/x64")
+        into("yafaray/windows/x64")
+        include("*.dll")
+    }
+    from("lib/yafaray/windows/x64/yafaray-plugins") {
+        into("yafaray/windows/x64/yafaray-plugins")
+        include("*.dll")
+    }
+    from("lib/yafaray/windows/i386") {
+        into("yafaray/windows/i386")
+        include("*.dll")
+    }
+    from("lib/yafaray/windows/i386/yafaray-plugins") {
+        into("yafaray/windows/i386/yafaray-plugins")
         include("*.dll")
     }
     from("lib/yafaray/macosx") {
-        into("lib/yafaray/macosx")
+        into("yafaray/macosx")
         include("*.jnilib", "*.dylib")
+    }
+    from("lib/yafaray/macosx/yafaray-plugins") {
+        into("yafaray/macosx/yafaray-plugins")
+        include("*.dylib")
     }
 
     doLast {
@@ -278,38 +298,58 @@ tasks.register<Jar>("jarExecutableWithPlugin") {
 
     // Include native libraries
     from("lib/java3d-1.6/linux/amd64") {
-        into("lib/java3d-1.6/linux/amd64")
+        into("java3d-1.6/linux/amd64")
         include("*.so")
     }
     from("lib/java3d-1.6/linux/i586") {
-        into("lib/java3d-1.6/linux/i586")
+        into("java3d-1.6/linux/i586")
         include("*.so")
     }
     from("lib/java3d-1.6/windows/x64") {
-        into("lib/java3d-1.6/windows/x64")
+        into("java3d-1.6/windows/x64")
         include("*.dll")
     }
     from("lib/java3d-1.6/windows/i386") {
-        into("lib/java3d-1.6/windows/i386")
+        into("java3d-1.6/windows/i386")
         include("*.dll")
     }
     from("lib/java3d-1.6/macosx") {
-        into("lib/java3d-1.6/macosx")
+        into("java3d-1.6/macosx")
         include("*.jnilib", "*.dylib")
     }
 
     // Include YafaRay native libraries
     from("lib/yafaray/linux/x64") {
-        into("lib/yafaray/linux/x64")
+        into("yafaray/linux/x64")
+        include("*.so")
+    }
+    from("lib/yafaray/linux/x64/yafaray-plugins") {
+        into("yafaray/linux/x64/yafaray-plugins")
         include("*.so")
     }
     from("lib/yafaray/windows/x64") {
-        into("lib/yafaray/windows/x64")
+        into("yafaray/windows/x64")
+        include("*.dll")
+    }
+    from("lib/yafaray/windows/x64/yafaray-plugins") {
+        into("yafaray/windows/x64/yafaray-plugins")
+        include("*.dll")
+    }
+    from("lib/yafaray/windows/i386") {
+        into("yafaray/windows/i386")
+        include("*.dll")
+    }
+    from("lib/yafaray/windows/i386/yafaray-plugins") {
+        into("yafaray/windows/i386/yafaray-plugins")
         include("*.dll")
     }
     from("lib/yafaray/macosx") {
-        into("lib/yafaray/macosx")
+        into("yafaray/macosx")
         include("*.jnilib", "*.dylib")
+    }
+    from("lib/yafaray/macosx/yafaray-plugins") {
+        into("yafaray/macosx/yafaray-plugins")
+        include("*.dylib")
     }
 
     dependsOn("costEstimatorPlugin")
