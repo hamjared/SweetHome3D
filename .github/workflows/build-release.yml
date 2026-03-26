@@ -237,6 +237,10 @@ jobs:
           # Copy bundled JRE
           Copy-Item "bundled-jre" "$BUNDLE_DIR/jre" -Recurse
 
+          # Copy Java3D native DLLs into jre/bin so JogAmp's native loader finds them
+          # JogAmp (JNILibLoaderBase) explicitly checks {java.home}/bin before java.library.path
+          Copy-Item "lib/java3d-1.6/windows/x64/*.dll" "$BUNDLE_DIR/jre/bin/"
+
           # Launcher: use start "" to detach so the cmd window closes immediately
           @"
           @echo off
