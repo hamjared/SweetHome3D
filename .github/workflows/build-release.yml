@@ -23,8 +23,13 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.7'
+
       - name: Build with Gradle
-        run: ./gradlew jarExecutable jarExecutableWithPlugin
+        run: gradle --no-daemon jarExecutable jarExecutableWithPlugin
 
       - name: Extract version
         id: version
@@ -131,8 +136,13 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.7'
+
       - name: Build with Gradle
-        run: ./gradlew jarExecutableWithPlugin
+        run: gradle --no-daemon jarExecutableWithPlugin
 
       - name: Prepare plugin for installer
         shell: pwsh
@@ -207,8 +217,13 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.7'
+
       - name: Build with Gradle
-        run: ./gradlew jarExecutableWithPlugin
+        run: gradle --no-daemon jarExecutableWithPlugin
 
       - name: Download Temurin JRE 21
         shell: pwsh
@@ -242,11 +257,13 @@ jobs:
           Copy-Item "lib/java3d-1.6/windows/amd64/*.dll" "$BUNDLE_DIR/jre/bin/"
 
           # Launcher: use start "" to detach so the cmd window closes immediately
+          # -Dcom.eteks.sweethome3d.applicationFolders=. tells the app to look for
+          # plugins/ relative to the bundle directory rather than %APPDATA%
           @"
           @echo off
           cd /d "%~dp0"
           for %%F in (SweetHome3D-*.jar) do (
-              start "" jre\bin\javaw.exe -jar "%%F"
+              start "" jre\bin\javaw.exe -Dcom.eteks.sweethome3d.applicationFolders=. -jar "%%F"
               exit /b
           )
           "@ | Set-Content -Path "$BUNDLE_DIR/SweetHome3D.bat" -Encoding ASCII

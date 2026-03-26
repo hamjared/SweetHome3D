@@ -20,9 +20,14 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.7'
+
       - name: Compile with Gradle
-        run: ./gradlew compileJava
+        run: gradle --no-daemon compileJava
 
       - name: Build JAR
-        run: ./gradlew jarExecutable
+        run: gradle --no-daemon jarExecutable
 
