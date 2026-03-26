@@ -152,7 +152,7 @@ tasks.register<Jar>("jarExecutable") {
         into("java3d-1.6/linux/i586")
         include("*.so")
     }
-    from("lib/java3d-1.6/windows/x64") {
+    from("lib/java3d-1.6/windows/amd64") {
         into("java3d-1.6/windows/x64")
         include("*.dll")
     }
@@ -305,7 +305,7 @@ tasks.register<Jar>("jarExecutableWithPlugin") {
         into("java3d-1.6/linux/i586")
         include("*.so")
     }
-    from("lib/java3d-1.6/windows/x64") {
+    from("lib/java3d-1.6/windows/amd64") {
         into("java3d-1.6/windows/x64")
         include("*.dll")
     }
