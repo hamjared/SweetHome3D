@@ -82,6 +82,7 @@ public class BOMSettingsDialog extends JDialog {
     tabs.addTab("Electrical", createElectricalTab());
     tabs.addTab("Plumbing",   createPlumbingTab());
     tabs.addTab("Furniture",  createFurnitureTab());
+    tabs.addTab("Baseboard",  createBaseboardTab());
     tabs.addTab("Wet Rooms",  createWetRoomsTab());
 
     add(tabs, BorderLayout.CENTER);
@@ -290,6 +291,16 @@ public class BOMSettingsDialog extends JDialog {
     p.addField("Labor per standard room ($):", ps.laborPerStandardRoom, v -> ps.laborPerStandardRoom = v);
     p.addField("Labor per wet room ($):",     ps.laborPerWetRoom,      v -> ps.laborPerWetRoom      = v);
     p.addDIYToggle(ps.isDIY, v -> ps.isDIY = v);
+    return wrapInScroll(p);
+  }
+
+  private JPanel createBaseboardTab() {
+    BOMSettings.BaseboardSettings bs = settings.getBaseboard();
+    FieldPanel p = new FieldPanel();
+    p.addSectionHeader("Baseboard is counted per wall side with a baseboard set.");
+    p.addField("Material cost per lin ft ($):", bs.costPerLinFt,  v -> bs.costPerLinFt  = v);
+    p.addField("Labor per lin ft ($):",         bs.laborPerLinFt, v -> bs.laborPerLinFt = v);
+    p.addDIYToggle(bs.isDIY, v -> bs.isDIY = v);
     return wrapInScroll(p);
   }
 

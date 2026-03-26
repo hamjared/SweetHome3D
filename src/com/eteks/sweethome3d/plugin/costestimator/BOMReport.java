@@ -31,7 +31,8 @@ public class BOMReport implements Serializable {
     ELECTRICAL("Electrical"),
     PLUMBING("Plumbing"),
     FLOORING("Flooring"),
-    FURNITURE("Furniture & Fixtures");
+    FURNITURE("Furniture & Fixtures"),
+    BASEBOARD("Baseboard");
 
     private final String displayName;
 

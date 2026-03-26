@@ -54,6 +54,7 @@ public class BOMSettings implements Serializable {
   private ElectricalSettings electrical = new ElectricalSettings();
   private PlumbingSettings plumbing = new PlumbingSettings();
   private FurnitureSettings furniture = new FurnitureSettings();
+  private BaseboardSettings baseboard = new BaseboardSettings();
 
   // Wet rooms (carried over from previous design)
   private List<Integer> wetRoomIndices = new ArrayList<>();
@@ -78,6 +79,7 @@ public class BOMSettings implements Serializable {
   public ElectricalSettings getElectrical() { return electrical; }
   public PlumbingSettings getPlumbing() { return plumbing; }
   public FurnitureSettings getFurniture() { return furniture; }
+  public BaseboardSettings getBaseboard() { return baseboard; }
 
   public List<Integer> getWetRoomIndices() { return wetRoomIndices; }
   public void setWetRoomIndices(List<Integer> v) { this.wetRoomIndices = new ArrayList<>(v); }
@@ -148,6 +150,10 @@ public class BOMSettings implements Serializable {
     // Furniture
     p.setProperty("furniture.isDIY",          String.valueOf(furniture.isDIY));
     p.setProperty("furniture.laborPerPiece",  String.valueOf(furniture.laborPerPiece));
+    // Baseboard
+    p.setProperty("baseboard.isDIY",          String.valueOf(baseboard.isDIY));
+    p.setProperty("baseboard.costPerLinFt",   String.valueOf(baseboard.costPerLinFt));
+    p.setProperty("baseboard.laborPerLinFt",  String.valueOf(baseboard.laborPerLinFt));
     // Wet rooms
     StringBuilder wetRooms = new StringBuilder();
     for (int i = 0; i < wetRoomIndices.size(); i++) {
@@ -223,6 +229,10 @@ public class BOMSettings implements Serializable {
     // Furniture
     s.furniture.isDIY         = parseBool(p,  "furniture.isDIY",         s.furniture.isDIY);
     s.furniture.laborPerPiece = parseFloat(p, "furniture.laborPerPiece", s.furniture.laborPerPiece);
+    // Baseboard
+    s.baseboard.isDIY         = parseBool(p,  "baseboard.isDIY",         s.baseboard.isDIY);
+    s.baseboard.costPerLinFt  = parseFloat(p, "baseboard.costPerLinFt",  s.baseboard.costPerLinFt);
+    s.baseboard.laborPerLinFt = parseFloat(p, "baseboard.laborPerLinFt", s.baseboard.laborPerLinFt);
     // Wet rooms
     String wetVal = p.getProperty("wetRoomIndices", "").trim();
     if (!wetVal.isEmpty()) {
@@ -377,5 +387,15 @@ public class BOMSettings implements Serializable {
     public float laborPerPiece = 0.00f;
     /** When true, no labor cost is added for furniture. */
     public boolean isDIY = true;
+  }
+
+  public static class BaseboardSettings implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    /** Material cost per linear foot of baseboard. */
+    public float costPerLinFt = 1.50f;
+    /** Labor cost per linear foot to install. */
+    public float laborPerLinFt = 1.00f;
+    public boolean isDIY = false;
   }
 }
