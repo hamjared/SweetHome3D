@@ -95,25 +95,24 @@ jobs:
 
             Built from commit: ${{ github.sha }}
 
-            ### Quick Start
+            ### Windows Downloads
 
-            **Option 1: Windows Installer (Recommended)**
-            - Download: `SweetHome3D-${{ steps.version.outputs.version }}-installer.exe`
-            - Just run the installer, no Java installation needed!
+            **Option 1: Windows Bundle ZIP (no install, no SmartScreen issues)**
+            - Download: `SweetHome3D-${{ steps.version.outputs.version }}-windows-bundle.zip`
+            - Unzip anywhere and double-click `SweetHome3D.bat` — Java is bundled, nothing to install
 
-            **Option 2: Cross-Platform Bundle (requires Java 21)**
-            - Download all files: `SweetHome3D-${{ steps.version.outputs.version }}.jar`, `run.sh`, and `CostEstimatorPlugin.jar`
-            - Extract to a folder
+            **Option 2: Windows Installer**
+            - Download: `SweetHome3D-${{ steps.version.outputs.version }}.exe`
+            - Installs to Program Files with Start Menu shortcut; may be flagged by Windows Smart App Control on first run
+
+            ### Other Platforms (requires Java 21)
+
+            **Cross-Platform Bundle**
+            - Download `SweetHome3D-${{ steps.version.outputs.version }}.jar` + `CostEstimatorPlugin.jar`
             - Run: `./run.sh` (Linux/Mac) or `run.bat` (Windows)
-
-            **Option 3: Standalone JAR**
-            - Download just `SweetHome3D-${{ steps.version.outputs.version }}.jar`
-            - Run: `java -jar SweetHome3D-${{ steps.version.outputs.version }}.jar`
-            - Plugin: Download `CostEstimatorPlugin.jar` and place in `~/.eteks/sweethome3d/plugins/` (Linux/Mac) or `%APPDATA%\eTeks\Sweet Home 3D\plugins` (Windows)
 
             ### Features
             - ✅ Java 21 LTS
-            - ✅ Gradle build system
             - ✅ Cost Estimator plugin pre-installed (Tools → Cost Estimator...)
             - ✅ Calculates: Framing, drywall, paint, flooring, electrical, plumbing, doors, windows
         env:
@@ -192,5 +191,82 @@ jobs:
         with:
           tag_name: v${{ needs.build-jars.outputs.version }}
           files: ./build/installer/SweetHome3D-${{ needs.build-jars.outputs.version }}.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-windows-bundle:
+    name: Build Windows Bundle ZIP
+    runs-on: windows-latest
+    needs: build-jars
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Build with Gradle
+        run: ./gradlew jarExecutableWithPlugin
+
+      - name: Download Temurin JRE 21
+        shell: pwsh
+        run: |
+          $JRE_URL = "https://api.adoptium.net/v3/binary/latest/21/ga/windows/x64/jre/hotspot/normal/eclipse"
+          Write-Host "Downloading Temurin JRE 21..."
+          Invoke-WebRequest -Uri $JRE_URL -OutFile "temurin-jre-21.zip" -MaximumRedirection 5
+          Expand-Archive -Path "temurin-jre-21.zip" -DestinationPath "jre-extract"
+          $JRE_DIR = Get-ChildItem "jre-extract" -Directory | Select-Object -First 1
+          Move-Item $JRE_DIR.FullName "bundled-jre"
+          Write-Host "JRE ready: $(Get-ChildItem bundled-jre/bin/java*.exe | Select-Object -ExpandProperty Name)"
+
+      - name: Create Windows bundle ZIP
+        shell: pwsh
+        run: |
+          $VERSION = [regex]::Match((Get-Content build.gradle.kts | Out-String), 'version = "([^"]+)"').Groups[1].Value
+          Write-Host "Building bundle for version: $VERSION"
+
+          $BUNDLE_DIR = "build/bundle/SweetHome3D-$VERSION-windows"
+          New-Item -ItemType Directory -Path "$BUNDLE_DIR/plugins" -Force | Out-Null
+
+          # Copy JARs
+          Copy-Item "install/SweetHome3D-$VERSION-with-plugin.jar" "$BUNDLE_DIR/SweetHome3D-$VERSION.jar"
+          Copy-Item "install/plugins/CostEstimatorPlugin.jar" "$BUNDLE_DIR/plugins/"
+
+          # Copy bundled JRE
+          Copy-Item "bundled-jre" "$BUNDLE_DIR/jre" -Recurse
+
+          # Launcher: use start "" to detach so the cmd window closes immediately
+          @"
+          @echo off
+          cd /d "%~dp0"
+          for %%F in (SweetHome3D-*.jar) do (
+              start "" jre\bin\javaw.exe -jar "%%F"
+              exit /b
+          )
+          "@ | Set-Content -Path "$BUNDLE_DIR/SweetHome3D.bat" -Encoding ASCII
+
+          # README
+          @"
+          Sweet Home 3D v$VERSION - Windows Bundle
+
+          No installation required. Unzip anywhere and double-click SweetHome3D.bat
+          Java is bundled — nothing else needed.
+
+          The Cost Estimator plugin is pre-installed (Tools menu).
+          All files must remain in the same folder.
+          "@ | Set-Content -Path "$BUNDLE_DIR/README.txt" -Encoding UTF8
+
+          $ZIP_PATH = "build/bundle/SweetHome3D-$VERSION-windows-bundle.zip"
+          Compress-Archive -Path "$BUNDLE_DIR" -DestinationPath $ZIP_PATH
+          $sizeMB = [math]::Round((Get-Item $ZIP_PATH).Length / 1MB, 2)
+          Write-Host "Bundle ZIP: SweetHome3D-$VERSION-windows-bundle.zip ($sizeMB MB)"
+
+      - name: Upload Windows bundle
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ needs.build-jars.outputs.version }}
+          files: ./build/bundle/SweetHome3D-${{ needs.build-jars.outputs.version }}-windows-bundle.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
