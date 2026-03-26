@@ -1452,6 +1452,10 @@ public class HomeXMLHandler extends DefaultHandler {
           doorOrWindow.setWallTop(wallTop);
         }
       }
+      BigDecimal cost = parseOptionalDecimal(attributes, "cost");
+      if (cost != null) {
+        piece.setCost(cost);
+      }
     } else {
       // Set group attributes that may exist but can't be set at instantiation time
       piece.setCatalogId(attributes.get("catalogId"));
@@ -1459,6 +1463,10 @@ public class HomeXMLHandler extends DefaultHandler {
       piece.setInformation(attributes.get("information"));
       piece.setLicense(attributes.get("license"));
       piece.setCreator(attributes.get("creator"));
+      BigDecimal groupCost = parseOptionalDecimal(attributes, "cost");
+      if (groupCost != null) {
+        piece.setCost(groupCost);
+      }
     }
   }
 

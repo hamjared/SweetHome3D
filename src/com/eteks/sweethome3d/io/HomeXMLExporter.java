@@ -439,10 +439,12 @@ public class HomeXMLExporter extends ObjectXMLExporter<Home> {
           }
         }
         writer.writeBigDecimalAttribute("price", price);
+        writer.writeBigDecimalAttribute("cost", piece.getCost());
       } else {
         writer.writeBigDecimalAttribute("price", piece.getPrice());
         writer.writeBigDecimalAttribute("valueAddedTaxPercentage", piece.getValueAddedTaxPercentage());
         writer.writeAttribute("currency", piece.getCurrency(), null);
+        writer.writeBigDecimalAttribute("cost", piece.getCost());
       }
       writer.writeAttribute("staircaseCutOutShape", piece.getStaircaseCutOutShape(), null);
       writer.writeFloatAttribute("dropOnTopElevation", piece.getDropOnTopElevation(), 1f);

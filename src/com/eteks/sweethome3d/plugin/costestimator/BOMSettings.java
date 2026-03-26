@@ -53,6 +53,7 @@ public class BOMSettings implements Serializable {
   private FlooringSettings flooring = new FlooringSettings();
   private ElectricalSettings electrical = new ElectricalSettings();
   private PlumbingSettings plumbing = new PlumbingSettings();
+  private FurnitureSettings furniture = new FurnitureSettings();
 
   // Wet rooms (carried over from previous design)
   private List<Integer> wetRoomIndices = new ArrayList<>();
@@ -76,6 +77,7 @@ public class BOMSettings implements Serializable {
   public FlooringSettings getFlooring() { return flooring; }
   public ElectricalSettings getElectrical() { return electrical; }
   public PlumbingSettings getPlumbing() { return plumbing; }
+  public FurnitureSettings getFurniture() { return furniture; }
 
   public List<Integer> getWetRoomIndices() { return wetRoomIndices; }
   public void setWetRoomIndices(List<Integer> v) { this.wetRoomIndices = new ArrayList<>(v); }
@@ -143,6 +145,9 @@ public class BOMSettings implements Serializable {
     p.setProperty("plumbing.costPerWetRoom",       String.valueOf(plumbing.costPerWetRoom));
     p.setProperty("plumbing.laborPerStandardRoom", String.valueOf(plumbing.laborPerStandardRoom));
     p.setProperty("plumbing.laborPerWetRoom",      String.valueOf(plumbing.laborPerWetRoom));
+    // Furniture
+    p.setProperty("furniture.isDIY",          String.valueOf(furniture.isDIY));
+    p.setProperty("furniture.laborPerPiece",  String.valueOf(furniture.laborPerPiece));
     // Wet rooms
     StringBuilder wetRooms = new StringBuilder();
     for (int i = 0; i < wetRoomIndices.size(); i++) {
@@ -215,6 +220,9 @@ public class BOMSettings implements Serializable {
     s.plumbing.costPerWetRoom       = parseFloat(p, "plumbing.costPerWetRoom",       s.plumbing.costPerWetRoom);
     s.plumbing.laborPerStandardRoom = parseFloat(p, "plumbing.laborPerStandardRoom", s.plumbing.laborPerStandardRoom);
     s.plumbing.laborPerWetRoom      = parseFloat(p, "plumbing.laborPerWetRoom",      s.plumbing.laborPerWetRoom);
+    // Furniture
+    s.furniture.isDIY         = parseBool(p,  "furniture.isDIY",         s.furniture.isDIY);
+    s.furniture.laborPerPiece = parseFloat(p, "furniture.laborPerPiece", s.furniture.laborPerPiece);
     // Wet rooms
     String wetVal = p.getProperty("wetRoomIndices", "").trim();
     if (!wetVal.isEmpty()) {
@@ -360,5 +368,14 @@ public class BOMSettings implements Serializable {
     public float laborPerStandardRoom = 300.00f;
     public float laborPerWetRoom = 1500.00f;
     public boolean isDIY = false;
+  }
+
+  public static class FurnitureSettings implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    /** Installation/assembly labor cost per piece. */
+    public float laborPerPiece = 0.00f;
+    /** When true, no labor cost is added for furniture. */
+    public boolean isDIY = true;
   }
 }

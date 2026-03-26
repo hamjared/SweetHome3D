@@ -32,6 +32,7 @@ public class BOMCalculator {
     new ElectricalCalculator(),
     new PlumbingCalculator(),
     new FlooringCalculator(),
+    new FurnitureCalculator(),
   };
 
   private BOMCalculator() {}

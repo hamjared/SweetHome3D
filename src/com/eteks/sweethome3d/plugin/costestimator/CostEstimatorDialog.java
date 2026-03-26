@@ -256,6 +256,7 @@ public class CostEstimatorDialog extends JDialog {
       case ELECTRICAL: return settings.getElectrical().isDIY;
       case PLUMBING:   return settings.getPlumbing().isDIY;
       case FLOORING:   return settings.getFlooring().isDIY;
+      case FURNITURE:  return settings.getFurniture().isDIY;
       default:         return false;
     }
   }
@@ -269,6 +270,7 @@ public class CostEstimatorDialog extends JDialog {
       case ELECTRICAL: settings.getElectrical().isDIY    = diy; break;
       case PLUMBING:   settings.getPlumbing().isDIY      = diy; break;
       case FLOORING:   settings.getFlooring().isDIY      = diy; break;
+      case FURNITURE:  settings.getFurniture().isDIY     = diy; break;
     }
   }
 

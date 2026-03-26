@@ -117,6 +117,8 @@ public class HomeFurniturePanel extends JPanel implements DialogView {
   private JLabel                  descriptionLabel;
   private JTextField              descriptionTextField;
   private JButton                 additionalPropertiesButton;
+  private JLabel                  costLabel;
+  private JSpinner                costSpinner;
   private JLabel                  priceLabel;
   private JSpinner                priceSpinner;
   private JLabel                  valueAddedTaxPercentageLabel;
@@ -286,6 +288,30 @@ public class HomeFurniturePanel extends JPanel implements DialogView {
           }
         });
     }
+
+    // Create Cost label and its spinner bound to COST controller property
+    this.costLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences,
+        HomeFurniturePanel.class, "costLabel.text"));
+    final NullableSpinner.NullableSpinnerNumberModel costSpinnerModel =
+        new NullableSpinner.NullableSpinnerNumberModel(BigDecimal.ZERO, BigDecimal.ZERO, new BigDecimal("1000000000"), BigDecimal.ONE);
+    this.costSpinner = new NullableSpinner(costSpinnerModel);
+    BigDecimal cost = controller.getCost();
+    costSpinnerModel.setNullable(true);
+    costSpinnerModel.setValue(cost);
+    final PropertyChangeListener costChangeListener = new PropertyChangeListener() {
+        public void propertyChange(PropertyChangeEvent ev) {
+          costSpinnerModel.setNullable(ev.getNewValue() == null);
+          costSpinnerModel.setValue(ev.getNewValue());
+        }
+      };
+    controller.addPropertyChangeListener(HomeFurnitureController.Property.COST, costChangeListener);
+    costSpinnerModel.addChangeListener(new ChangeListener() {
+        public void stateChanged(ChangeEvent ev) {
+          controller.removePropertyChangeListener(HomeFurnitureController.Property.COST, costChangeListener);
+          controller.setCost((BigDecimal)costSpinnerModel.getNumber());
+          controller.addPropertyChangeListener(HomeFurnitureController.Property.COST, costChangeListener);
+        }
+      });
 
     if (controller.isPropertyEditable(HomeFurnitureController.Property.PRICE)) {
       // Create Price label and its spinner bound to PRICE controller property
@@ -1099,6 +1125,11 @@ public class HomeFurniturePanel extends JPanel implements DialogView {
         this.additionalPropertiesButton.setMnemonic(KeyStroke.getKeyStroke(
             preferences.getLocalizedString(HomeFurniturePanel.class, "additionalPropertiesButton.mnemonic")).getKeyCode());
       }
+      if (this.costLabel != null) {
+        this.costLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(
+            preferences.getLocalizedString(HomeFurniturePanel.class, "costLabel.mnemonic")).getKeyCode());
+        this.costLabel.setLabelFor(this.costSpinner);
+      }
       if (this.priceLabel != null) {
         this.priceLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(
             preferences.getLocalizedString(HomeFurniturePanel.class, "priceLabel.mnemonic")).getKeyCode());
@@ -1250,6 +1281,14 @@ public class HomeFurniturePanel extends JPanel implements DialogView {
             this.descriptionLabel != null ? 5 : 3, 1, 1, 1, 0, 0, GridBagConstraints.LINE_START,
             GridBagConstraints.NONE, new Insets(standardGap, 0, 0, 0), 0, 0));
       }
+    }
+    if (this.costLabel != null) {
+      namePanel.add(this.costLabel, new GridBagConstraints(
+          0, 2, 1, 1, 0, 0, labelAlignment, GridBagConstraints.NONE,
+          new Insets(standardGap, 0, 0, standardGap), 0, 0));
+      namePanel.add(this.costSpinner, new GridBagConstraints(
+          1, 2, 1, 1, 0, 0, GridBagConstraints.LINE_START,
+          GridBagConstraints.HORIZONTAL, new Insets(standardGap, 0, 0, 0), OperatingSystem.isMacOSX() ? -60 : -30, 0));
     }
     if (namePanel.getComponentCount() > 0) {
       add(namePanel, new GridBagConstraints(0, 0, orientationPanelDisplayed ? 4 : 3, 1, 0, 0, labelAlignment,

@@ -53,7 +53,7 @@ public class HomePieceOfFurniture extends HomeObject implements PieceOfFurniture
    * to a piece of furniture will be notified under a property name equal to the string value of one these properties.
    */
   public enum Property {CATALOG_ID, NAME, NAME_VISIBLE, NAME_X_OFFSET, NAME_Y_OFFSET, NAME_STYLE, NAME_ANGLE,
-      DESCRIPTION, INFORMATION, CREATOR, LICENSE, PRICE, VALUE_ADDED_TAX_PERCENTAGE, CURRENCY, ICON, PLAN_ICON, MODEL,
+      DESCRIPTION, INFORMATION, CREATOR, LICENSE, COST, PRICE, VALUE_ADDED_TAX_PERCENTAGE, CURRENCY, ICON, PLAN_ICON, MODEL,
       WIDTH, WIDTH_IN_PLAN, DEPTH, DEPTH_IN_PLAN, HEIGHT, HEIGHT_IN_PLAN,
       COLOR, TEXTURE, MODEL_MATERIALS, MODEL_TRANSFORMATIONS,
       STAIRCASE_CUT_OUT_SHAPE, SHININESS, VISIBLE,
@@ -321,6 +321,7 @@ public class HomePieceOfFurniture extends HomeObject implements PieceOfFurniture
   private TextStyle              nameStyle;
   private float                  nameAngle;
   private String                 description;
+  private BigDecimal             cost;
   private String                 information;
   private String                 creator;
   private String                 license;
@@ -684,6 +685,26 @@ public class HomePieceOfFurniture extends HomeObject implements PieceOfFurniture
       String oldDescription = this.description;
       this.description = description;
       firePropertyChange(Property.DESCRIPTION.name(), oldDescription, description);
+    }
+  }
+
+  /**
+   * Returns the project cost of this piece of furniture, or <code>null</code> if not set.
+   */
+  public BigDecimal getCost() {
+    return this.cost;
+  }
+
+  /**
+   * Sets the project cost of this piece of furniture. Once this piece is updated,
+   * listeners added to this piece will receive a change notification.
+   */
+  public void setCost(BigDecimal cost) {
+    if (cost != this.cost
+        && (cost == null || !cost.equals(this.cost))) {
+      BigDecimal oldCost = this.cost;
+      this.cost = cost;
+      firePropertyChange(Property.COST.name(), oldCost, cost);
     }
   }
 

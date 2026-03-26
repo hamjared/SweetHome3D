@@ -30,7 +30,8 @@ public class BOMReport implements Serializable {
     PAINT("Paint"),
     ELECTRICAL("Electrical"),
     PLUMBING("Plumbing"),
-    FLOORING("Flooring");
+    FLOORING("Flooring"),
+    FURNITURE("Furniture & Fixtures");
 
     private final String displayName;
 

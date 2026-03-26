@@ -81,6 +81,7 @@ public class BOMSettingsDialog extends JDialog {
     tabs.addTab("Flooring",   createFlooringTab());
     tabs.addTab("Electrical", createElectricalTab());
     tabs.addTab("Plumbing",   createPlumbingTab());
+    tabs.addTab("Furniture",  createFurnitureTab());
     tabs.addTab("Wet Rooms",  createWetRoomsTab());
 
     add(tabs, BorderLayout.CENTER);
@@ -289,6 +290,15 @@ public class BOMSettingsDialog extends JDialog {
     p.addField("Labor per standard room ($):", ps.laborPerStandardRoom, v -> ps.laborPerStandardRoom = v);
     p.addField("Labor per wet room ($):",     ps.laborPerWetRoom,      v -> ps.laborPerWetRoom      = v);
     p.addDIYToggle(ps.isDIY, v -> ps.isDIY = v);
+    return wrapInScroll(p);
+  }
+
+  private JPanel createFurnitureTab() {
+    BOMSettings.FurnitureSettings fs = settings.getFurniture();
+    FieldPanel p = new FieldPanel();
+    p.addSectionHeader("Furniture & fixtures costs are set per-piece in the floor plan.");
+    p.addField("Labor per piece ($):", fs.laborPerPiece, v -> fs.laborPerPiece = v);
+    p.addDIYToggle(fs.isDIY, v -> fs.isDIY = v);
     return wrapInScroll(p);
   }
 
